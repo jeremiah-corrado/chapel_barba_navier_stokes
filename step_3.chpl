@@ -1,6 +1,6 @@
-use file_writer_util;
+use util;
 
-// define a default setup
+// define default simulation parameters
 config const nx = 41;
 const dx : real = 2.0 / (nx - 1);
 config const nt = 20;
