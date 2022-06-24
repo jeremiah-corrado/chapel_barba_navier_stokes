@@ -48,7 +48,7 @@ for n in 0..#nt {
 
     // compute the bulk of the stencil computation in parallel across all locals
     forall i in CompDom {
-        u[i] = un[i] - un[i] * dt / dx *(un[i] - un[i-1]) + nu * dt / dx**2 *
+        u[i] = un[i] - un[i] * dt / dx * (un[i] - un[i-1]) + nu * dt / dx**2 *
                 (un[i+1] - 2 * un[i] + un[i-1]);
     }
 

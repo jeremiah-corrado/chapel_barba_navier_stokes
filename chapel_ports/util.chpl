@@ -8,7 +8,6 @@ proc write_array_to_file(path: string, a : [] real) {
         try {
             var write_channel = f.writer();
             try {
-                // write_channel.writeln(a);
                 for val in a {
                     write_channel.writef("%.8dr\n", val);
                 }
