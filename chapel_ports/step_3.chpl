@@ -38,4 +38,4 @@ for n in 0..#nt {
 writeln("\nDomain (t = ", nt * dt,"):");
 writeln(u);
 
-write_array_to_file("sim_output/step_3_output.txt", u);
+write_array_to_file("./sim_output/step_3_output.txt", u);
