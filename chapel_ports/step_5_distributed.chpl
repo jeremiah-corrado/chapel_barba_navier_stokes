@@ -1,3 +1,4 @@
+use StencilDist;
 use util;
 
 // define default simulation parameters
@@ -25,8 +26,15 @@ writeln();
 writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 writeln("with: c = ", c);
 
-// create an 2-dimensional array to represent the computational Domain
-var u : [{0..<nx, 0..<ny}] real;
+// setup a stencil-optimized 2D domain map for an efficient memory-parallel computation
+const Space = {0..<nx, 0..<ny};
+const SpaceInner = {1..<(nx-1), 1..<(nx-1)};
+
+const CompDom = Space dmapped Stencil(
+    SpaceInner, // our stencil computation is concerned with the inner set of points
+    fluff=(1,1) // each locale only needs to know about 1 point from the adjacent locales
+);
+var u : [CompDom] real;
 
 // set up the initial conditions
 u = 1.0;
@@ -37,7 +45,8 @@ var un = u;
 for i in 0..#nt {
     u <=> un;
 
-    foreach (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+    // compute the stencil computation in parallel across all locales
+    forall (i, j) in {1..<(nx-1), 1..<(ny-1)} {
         u[i, j] = (un[i, j] - (c * dt / dx * (un[i, j] - un[i, j - 1])) -
                               (c * dt / dy * (un[i, j] - un[i - 1, j])));
     }
@@ -48,4 +57,4 @@ for i in 0..#nt {
     u[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_5_output.txt", u);
+write_array_to_file("./sim_output/step_5_dist_output.txt", u);
