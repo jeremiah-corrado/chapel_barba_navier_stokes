@@ -32,7 +32,7 @@ surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
 if show_plots: pyplot.show()
 
 ### apply fd equation for nt iterations
-for n in range(nt + 1):
+for n in range(nt):
     un = u.copy()
     u[1:, 1:] = (un[1:, 1:] - (c * dt / dx * (un[1:, 1:] - un[1:, :-1])) -
                               (c * dt / dy * (un[1:, 1:] - un[:-1, 1:])))
@@ -45,3 +45,5 @@ fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
 X, Y = numpy.meshgrid(x, y)
 surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
 if show_plots: pyplot.show()
+
+numpy.savetxt("./sim_output/step_5_py_output.txt", u, fmt='%.8f')

@@ -28,7 +28,7 @@ const SpaceInner = {1..<(nx-1)};
 
 const CompDom = Space dmapped Stencil(
     SpaceInner, // our stencil computation is concerned with the inner set of points
-    fluff=(1,) // each local only needs to know about 1 point from the adjacent locals
+    fluff=(1,) // each locale only needs to know about 1 point from the adjacent locales
 );
 var u : [CompDom] real;
 
@@ -40,13 +40,13 @@ u.updateFluff();
 writeln("u(t = 0, x):");
 writeln(u);
 
-// apply the differential equation for nt iterations
+// apply the fd equation for nt iterations
 var un = u;
 for n in 0..#nt {
     u <=> un;
-    un.updateFluff(); // update the cached "fluff" points on the edge of each local
+    un.updateFluff(); // update the cached "fluff" points on the edge of each locale
 
-    // compute the bulk of the stencil computation in parallel across all locals
+    // compute the bulk of the stencil computation in parallel across all locales
     forall i in CompDom {
         u[i] = un[i] - un[i] * dt / dx * (un[i] - un[i-1]) + nu * dt / dx**2 *
                 (un[i+1] - 2 * un[i] + un[i-1]);

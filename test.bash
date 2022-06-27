@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {1..4}
+for i in {1..5}
 do
     echo "Comparing Chapel and Python results from step $i"
     chpl --fast -o bin/step_$i chapel_ports/step_$i.chpl

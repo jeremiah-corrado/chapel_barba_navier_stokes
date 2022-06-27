@@ -25,7 +25,7 @@ u[(0.5 / dx):int..<(1.0 / dx + 1):int] = 2.0;
 writeln("\nDomain (t = 0):");
 writeln(u);
 
-// apply the differential equation for nt iterations
+// apply the fd equation for nt iterations
 var un = u;
 for n in 0..#nt {
     u <=> un;

@@ -31,7 +31,7 @@ var u : [Space] real;
 writeln("u(t = 0, x):");
 writeln(u);
 
-// apply the differential equation for nt iterations
+// apply the fd equation for nt iterations
 var un = u;
 for i in 0..#nt {
     u <=> un;
