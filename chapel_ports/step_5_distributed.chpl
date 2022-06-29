@@ -46,7 +46,7 @@ for i in 0..#nt {
     u <=> un;
 
     // compute the stencil computation in parallel across all locales
-    forall (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+    forall (i, j) in SpaceInner {
         u[i, j] = (un[i, j] - (c * dt / dx * (un[i, j] - un[i, j - 1])) -
                               (c * dt / dy * (un[i, j] - un[i - 1, j])));
     }
