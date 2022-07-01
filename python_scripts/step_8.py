@@ -7,14 +7,15 @@ import sys
 show_plots = "--show_plots" in sys.argv[1:]
 
 ### setup simulation parameters
-nx = 81
-ny = 81
-nt = 100
+nx = 41
+ny = 41
+nt = 120
 c = 1
 dx = 2 / (nx - 1)
 dy = 2 / (ny - 1)
-sigma = .2
-dt = sigma * dx
+sigma = .0009
+nu = 0.01
+dt = sigma * dx * dy / nu
 
 ### setup computational domain
 x = numpy.linspace(0, 2, nx)
@@ -41,12 +42,25 @@ for n in range(nt):
     un = u.copy()
     vn = v.copy()
 
-    u[1:, 1:] = (un[1:, 1:] -
-                 (un[1:, 1:] * c * dt / dx * (un[1:, 1:] - un[1:, :-1])) -
-                  vn[1:, 1:] * c * dt / dy * (un[1:, 1:] - un[:-1, 1:]))
-    v[1:, 1:] = (vn[1:, 1:] -
-                 (un[1:, 1:] * c * dt / dx * (vn[1:, 1:] - vn[1:, :-1])) -
-                 vn[1:, 1:] * c * dt / dy * (vn[1:, 1:] - vn[:-1, 1:]))
+    u[1:-1, 1:-1] = (un[1:-1, 1:-1] -
+                     dt / dx * un[1:-1, 1:-1] *
+                     (un[1:-1, 1:-1] - un[1:-1, 0:-2]) -
+                     dt / dy * vn[1:-1, 1:-1] *
+                     (un[1:-1, 1:-1] - un[0:-2, 1:-1]) +
+                     nu * dt / dx**2 *
+                     (un[1:-1,2:] - 2 * un[1:-1, 1:-1] + un[1:-1, 0:-2]) +
+                     nu * dt / dy**2 *
+                     (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[0:-2, 1:-1]))
+
+    v[1:-1, 1:-1] = (vn[1:-1, 1:-1] -
+                     dt / dx * un[1:-1, 1:-1] *
+                     (vn[1:-1, 1:-1] - vn[1:-1, 0:-2]) -
+                     dt / dy * vn[1:-1, 1:-1] *
+                    (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) +
+                     nu * dt / dx**2 *
+                     (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) +
+                     nu * dt / dy**2 *
+                     (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2, 1:-1]))
 
     u[0, :] = 1
     u[-1, :] = 1
@@ -66,5 +80,5 @@ surf = ax[1].plot_surface(X, Y, v[:], cmap=cm.viridis)
 ax[1].set_title("v(x, y)")
 if show_plots: pyplot.show()
 
-numpy.savetxt("./sim_output/step_6_py_u_output.txt", u, fmt='%.8f')
-numpy.savetxt("./sim_output/step_6_py_v_output.txt", v, fmt='%.8f')
+numpy.savetxt("./sim_output/step_8_py_u_output.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_8_py_v_output.txt", v, fmt='%.8f')
