@@ -1,3 +1,4 @@
+use StencilDist;
 use util;
 
 // define default simulation parameters
@@ -23,12 +24,21 @@ writeln(dy * (ny - 1));
 writeln();
 writeln("with dt = ", dt, ")");
 
-// create an 2-dimensional array to represent the computational Domain
-var u : [{0..<nx, 0..<ny}] real;
+// setup a stencil-optimized 2D domain map for an efficient memory-parallel computation
+const Space = {0..<nx, 0..<ny};
+const SpaceInner = {1..<(nx-1), 1..<(nx-1)};
 
-diffuse(10, u); write_array_to_file("./sim_output/step_7_a_output.txt", u);
-diffuse(14, u); write_array_to_file("./sim_output/step_7_b_output.txt", u);
-diffuse(50, u); write_array_to_file("./sim_output/step_7_output.txt", u);
+const CompDom = Space dmapped Stencil(
+    SpaceInner, // our stencil computation is concerned with the inner set of points
+    fluff=(1,1) // each locale only needs to know about 1 point from the adjacent locales
+);
+
+// create an 2-dimensional array to represent the computational Domain
+var u : [CompDom] real;
+
+diffuse(10, u); write_array_to_file("./sim_output/step_7_dist_a_output.txt", u);
+diffuse(14, u); write_array_to_file("./sim_output/step_7_dist_b_output.txt", u);
+diffuse(50, u); write_array_to_file("./sim_output/step_7_dist_output.txt", u);
 
 // apply the diffusion operation to 'u' for 'nt' iterations
 proc diffuse(nt: int, ref u : [?D] real) {
@@ -37,13 +47,17 @@ proc diffuse(nt: int, ref u : [?D] real) {
 
     // call helper procedure to set the initial conditions
     init_conditions(u);
+    u.updateFluff();
 
     // apply the fd equation for nt iterations
     var un = u;
     for i in 0..#nt {
         u <=> un;
 
-        foreach (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+        // update the cached "fluff" points on the edge of each locale
+        un.updateFluff();
+
+        forall (i, j) in SpaceInner {
             u[i, j] = un[i, j] +
                         nu * dt / dx**2 *
                             (un[i-1, j] - 2 * un[i, j] + un[i+1, j]) +

@@ -42,8 +42,11 @@ var v : [CompDom] real;
 // set up the initial conditions
 u = 1.0;
 u[(0.5 / dy):int..<(1.0 / dy + 1):int, (0.5 / dx):int..<(1.0 / dx + 1):int] = 2.0;
+u.updateFluff();
+
 v = 1.0;
 v[(0.5 / dy):int..<(1.0 / dy + 1):int, (0.5 / dx):int..<(1.0 / dx + 1):int] = 2.0;
+v.updateFluff();
 
 // apply the fd equation for nt iterations
 var un = u;
@@ -51,6 +54,10 @@ var vn = v;
 for i in 0..#nt {
     u <=> un;
     v <=> vn;
+
+    // update the cached "fluff" points on the edge of each locale
+    un.updateFluff();
+    vn.updateFluff();
 
     // compute the stencil computation in parallel across all locales
     forall (i, j) in SpaceInner {
