@@ -1,3 +1,4 @@
+use stencilDist;
 use util;
 
 // define default simulation parameters
@@ -9,11 +10,19 @@ config const l1_tolerance = 1e-4;
 config const max_num_iters = 10000;
 
 // create a 2D array to represent solution
-var p : [{0..<nx, 0..<ny}] real;
+const Space = {0..<nx, 0..<ny};
+const SpaceInner = {1..<(nx-1), 1..<(nx-1)};
+
+const CompDom = Space dmapped Stencil(
+    SpaceInner, // our stencil computation is concerned with the inner set of points
+    fluff=(1,1) // each locale only needs to know about 1 point from the adjacent locales
+);
+
+var p: [CompDom] real;
 
 // solve the 2D Laplace's equation with the given boundary conditions
 solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
-write_array_to_file("./sim_output/step_9_output.txt", p);
+write_array_to_file("./sim_output/step_9_dist_output.txt", p);
 
 // procedure to solve Laplace's Equation on p with the desired tolerance
 proc solveLaplace2D(
@@ -40,7 +49,7 @@ proc solveLaplace2D(
         p <=> pn;
 
         // apply fd equation
-        foreach (i, j) in Ds {
+        forall (i, j) in Ds {
             p[i, j] = (
                 dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                 dx**2 * (pn[i+1, j] + pn[i-1, j])
@@ -68,5 +77,7 @@ record linYBoundary {
         p[.., D.dim(1).high] = this.y;                      // p(2.0, y) = y
         p[0, ..] = p[1, ..];                                // dp/dy(x, 0.0) = 0
         p[D.dim(0).high, ..] = p[D.dim(0).high-1, ..];      // dp/dy(x, 1.0) = 0
+
+        p.updateFluff();
     }
 }
