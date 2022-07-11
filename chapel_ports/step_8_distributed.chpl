@@ -11,6 +11,8 @@ const dy = 2.0 / (ny - 1);
 config const sigma = 0.0009;
 const dt = sigma * dx * dy / nu;
 
+config const write_data = false;
+
 writeln("Running 2D Burgers' Eq. Simulation over: ");
 writeln();
 writeln("0 \t\t ", dx * (nx - 1));
@@ -51,7 +53,7 @@ v.updateFluff();
 // apply the fd equation for nt iterations
 var un = u;
 var vn = v;
-for i in 0..nt {
+for i in 0..#nt {
     u <=> un;
     v <=> vn;
 
@@ -85,5 +87,9 @@ for i in 0..nt {
     v[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_8_dist_u_output.txt", u);
-write_array_to_file("./sim_output/step_8_dist_v_output.txt", v);
+if write_data {
+    write_array_to_file("./sim_output/step_8/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_8/ch_v.txt", v);
+    write_array_to_file("./sim_output/step_8/ch_x.txt", linspace(0.0, 2.0, nx));
+    write_array_to_file("./sim_output/step_8/ch_y.txt", linspace(0.0, 2.0, ny));
+}

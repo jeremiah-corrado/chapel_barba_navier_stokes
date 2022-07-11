@@ -13,6 +13,7 @@ var p : [{0..<nx, 0..<ny}] real;
 
 // solve the 2D Laplace's equation with the given boundary conditions
 solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
+
 write_array_to_file("./sim_output/step_9/ch_u.txt", p);
 write_array_to_file("./sim_output/step_9/ch_x.txt", linspace(0.0, 2.0, nx));
 write_array_to_file("./sim_output/step_9/ch_y.txt", linspace(0.0, 2.0, ny));

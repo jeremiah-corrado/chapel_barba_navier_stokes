@@ -15,6 +15,8 @@ const dx = 2 * pi / (nx - 1);
 config const nu = 0.07;
 const dt = dx * nu;
 
+config const write_data = false;
+
 writeln("Running 1D Diffusion Simulation over: ");
 writeln();
 writeln("*--------(", nx, "x)--------* \t (dx = ", dx, ")");
@@ -33,12 +35,9 @@ const CompDom = Space dmapped Stencil(
 var u : [CompDom] real;
 
 // setup initial conditions
-const x = linspace(0.0, 2 * pi, nx);
+const x = linspace_dist(0.0, 2 * pi, nx, CompDom);
 [i in Space] u[i] = ufunc(0, x[i], nu);
 u.updateFluff();
-
-writeln("u(t = 0, x):");
-writeln(u);
 
 // apply the fd equation for nt iterations
 var un = u;
@@ -58,7 +57,7 @@ for n in 0..#nt {
     u[nx-1] = u[0];
 }
 
-writeln("Domain (t = ", nt * dt,"):");
-writeln(u[Space]);
-
-write_array_to_file("./sim_output/step_4_dist_output.txt", u);
+if write_data {
+    write_array_to_file("./sim_output/step_4/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_4/ch_x.txt", x);
+}

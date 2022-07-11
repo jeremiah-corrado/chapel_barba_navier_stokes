@@ -42,3 +42,12 @@ proc linspace(min: real, max: real, n: int) {
     }
     return a;
 }
+
+proc linspace_dist(min: real, max: real, n: int, D) {
+    const step = (max - min) / (n - 1):real;
+    var a : [D] real;
+    forall i in 0..#n {
+        a[i] = i * step;
+    }
+    return a;
+}

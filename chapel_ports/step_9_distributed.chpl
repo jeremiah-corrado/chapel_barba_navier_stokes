@@ -9,6 +9,8 @@ const dy = 1.0 / (ny - 1);
 config const l1_tolerance = 1e-4;
 config const max_num_iters = 10000;
 
+config const write_data = false;
+
 // create a 2D array to represent solution
 const Space = {0..<nx, 0..<ny};
 const SpaceInner = {1..<(nx-1), 1..<(nx-1)};
@@ -22,7 +24,12 @@ var p: [CompDom] real;
 
 // solve the 2D Laplace's equation with the given boundary conditions
 solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
-write_array_to_file("./sim_output/step_9_dist_output.txt", p);
+
+if write_data {
+    write_array_to_file("./sim_output/step_9/ch_u.txt", p);
+    write_array_to_file("./sim_output/step_9/ch_x.txt", linspace(0.0, 2.0, nx));
+    write_array_to_file("./sim_output/step_9/ch_y.txt", linspace(0.0, 2.0, ny));
+}
 
 // procedure to solve Laplace's Equation on p with the desired tolerance
 proc solveLaplace2D(

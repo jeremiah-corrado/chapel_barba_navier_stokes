@@ -11,6 +11,8 @@ const dy = 2.0 / (ny - 1);
 config const sigma = 0.2;
 const dt = sigma * dx;
 
+config const write_data = false;
+
 writeln("Running 2D Linear Convection Simulation over: ");
 writeln();
 writeln("0 \t\t ", dx * (nx - 1));
@@ -57,4 +59,8 @@ for i in 0..#nt {
     u[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_5_dist_output.txt", u);
+if write_data {
+    write_array_to_file("./sim_output/step_5/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_5/ch_x.txt", linspace(0.0, 2.0, nx));
+    write_array_to_file("./sim_output/step_5/ch_y.txt", linspace(0.0, 2.0, ny));
+}

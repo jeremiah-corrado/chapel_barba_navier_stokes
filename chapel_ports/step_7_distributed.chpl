@@ -10,6 +10,8 @@ const dy = 2.0 / (ny - 1);
 config const sigma = 0.25;
 const dt = sigma * dx * dy / nu;
 
+config const write_data = false;
+
 writeln("Running 2D Diffusion Simulation over: ");
 writeln();
 writeln("0 \t\t ", dx * (nx - 1));
@@ -36,9 +38,13 @@ const CompDom = Space dmapped Stencil(
 // create an 2-dimensional array to represent the computational Domain
 var u : [CompDom] real;
 
-diffuse(10, u); write_array_to_file("./sim_output/step_7_dist_a_output.txt", u);
-diffuse(14, u); write_array_to_file("./sim_output/step_7_dist_b_output.txt", u);
-diffuse(50, u); write_array_to_file("./sim_output/step_7_dist_output.txt", u);
+diffuse(50, u);
+
+if write_data {
+    write_array_to_file("./sim_output/step_7/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_7/ch_x.txt", linspace(0.0, 2.0, nx));
+    write_array_to_file("./sim_output/step_7/ch_y.txt", linspace(0.0, 2.0, ny));
+}
 
 // apply the diffusion operation to 'u' for 'nt' iterations
 proc diffuse(nt: int, ref u : [?D] real) {
