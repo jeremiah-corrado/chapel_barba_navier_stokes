@@ -6,25 +6,7 @@ proc write_array_to_file(path: string, a : [?D] real) {
     try! {
         f = open(path, iomode.cw);
         var write_channel = f.writer();
-        select D.rank {
-            when 1 {
-                for val in a {
-                    write_channel.writef("%.8dr\n", val);
-                }
-            }
-            when 2 {
-                const (rx, ry) = D.dims();
-                for i in rx {
-                    for j in (ry.first)..(ry.last - 1) {
-                        write_channel.writef("%.8dr ", a[(i, j)]);
-                    }
-                    write_channel.writef("%.8dr\n", a[(i, ry.last)]);
-                }
-            }
-            otherwise {
-                writeln("Only rank 1 and 2 arrays are supported!");
-            }
-        }
+        write_array_to_channel(write_channel, a);
     } catch {
         writeln("Unable to write to file: ", path);
     }
@@ -33,6 +15,22 @@ proc write_array_to_file(path: string, a : [?D] real) {
         f.close();
     } catch {
         writeln("Unable to close file: ", path);
+    }
+}
+
+private proc write_array_to_channel(channel, a : [?D] real) where D.rank == 1 {
+    for val in a {
+        channel.writef("%.8dr\n", val);
+    }
+}
+
+private proc write_array_to_channel(channel, a : [?D] real) where D.rank == 2 {
+    const (rx, ry) = D.dims();
+    for i in rx {
+        for j in (ry.first)..(ry.last - 1) {
+            channel.writef("%.8dr ", a[(i, j)]);
+        }
+        channel.writef("%.8dr\n", a[(i, ry.last)]);
     }
 }
 
