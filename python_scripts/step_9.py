@@ -84,3 +84,5 @@ p = laplace2d(p, y, dx, dy, 1e-4)
 
 ### Plot solution
 plot2D(x, y, p)
+
+numpy.savetxt("./sim_output/step_9/py_u.txt", p, fmt='%.8f')

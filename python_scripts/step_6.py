@@ -66,5 +66,5 @@ surf = ax[1].plot_surface(X, Y, v[:], cmap=cm.viridis)
 ax[1].set_title("v(x, y)")
 if show_plots: pyplot.show()
 
-numpy.savetxt("./sim_output/step_6_py_u_output.txt", u, fmt='%.8f')
-numpy.savetxt("./sim_output/step_6_py_v_output.txt", v, fmt='%.8f')
+numpy.savetxt("./sim_output/step_6/py_u.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_6/py_v.txt", v, fmt='%.8f')

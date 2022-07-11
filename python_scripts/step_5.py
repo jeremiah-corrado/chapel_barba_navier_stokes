@@ -46,4 +46,4 @@ X, Y = numpy.meshgrid(x, y)
 surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
 if show_plots: pyplot.show()
 
-numpy.savetxt("./sim_output/step_5_py_output.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_5/py_u.txt", u, fmt='%.8f')

@@ -36,4 +36,5 @@ for n in 0..#nt {
 writeln("\nDomain (t = ", nt * dt,"):");
 writeln(u);
 
-write_array_to_file("./sim_output/step_2_output.txt", u);
+write_array_to_file("./sim_output/step_2/ch_u.txt", u);
+write_array_to_file("./sim_output/step_2/ch_x.txt", linspace(0.0, 2.0, nx));

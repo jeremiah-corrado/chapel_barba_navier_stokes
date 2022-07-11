@@ -61,5 +61,7 @@ for i in 0..#nt {
     v[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_6_u_output.txt", u);
-write_array_to_file("./sim_output/step_6_v_output.txt", v);
+write_array_to_file("./sim_output/step_6/ch_u.txt", u);
+write_array_to_file("./sim_output/step_6/ch_v.txt", v);
+write_array_to_file("./sim_output/step_6/ch_x.txt", linspace(0.0, 2.0, nx));
+write_array_to_file("./sim_output/step_6/ch_y.txt", linspace(0.0, 2.0, ny));

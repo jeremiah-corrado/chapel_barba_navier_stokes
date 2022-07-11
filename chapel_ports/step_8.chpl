@@ -38,7 +38,7 @@ v[(0.5 / dy):int..<(1.0 / dy + 1):int, (0.5 / dx):int..<(1.0 / dx + 1):int] = 2.
 // apply the fd equation for nt iterations
 var un = u;
 var vn = v;
-for i in 0..nt {
+for i in 0..#nt {
     u <=> un;
     v <=> vn;
 
@@ -68,5 +68,7 @@ for i in 0..nt {
     v[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_8_u_output.txt", u);
-write_array_to_file("./sim_output/step_8_v_output.txt", v);
+write_array_to_file("./sim_output/step_8/ch_u.txt", u);
+write_array_to_file("./sim_output/step_8/ch_v.txt", v);
+write_array_to_file("./sim_output/step_8/ch_x.txt", linspace(0.0, 2.0, nx));
+write_array_to_file("./sim_output/step_8/ch_y.txt", linspace(0.0, 2.0, ny));

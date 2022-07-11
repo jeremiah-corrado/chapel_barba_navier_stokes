@@ -48,4 +48,6 @@ for i in 0..#nt {
     u[.., ny - 1] = 1.0;
 }
 
-write_array_to_file("./sim_output/step_5_output.txt", u);
+write_array_to_file("./sim_output/step_5/ch_u.txt", u);
+write_array_to_file("./sim_output/step_5/ch_x.txt", linspace(0.0, 2.0, nx));
+write_array_to_file("./sim_output/step_5/ch_y.txt", linspace(0.0, 2.0, ny));

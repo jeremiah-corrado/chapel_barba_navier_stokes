@@ -63,4 +63,4 @@ pyplot.ylim([0, 10])
 pyplot.legend()
 if show_plots: pyplot.show()
 
-numpy.savetxt("./sim_output/step_4_py_output.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_4/py_u.txt", u, fmt='%.8f')

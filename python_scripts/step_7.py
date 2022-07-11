@@ -2,7 +2,6 @@ import numpy
 from matplotlib import pyplot
 from matplotlib import cm
 import sys
-import math
 
 show_plots = "--show_plots" in sys.argv[1:]
 
@@ -52,10 +51,7 @@ def diffuse(nt):
     if show_plots: pyplot.show()
 
 diffuse(10)
-numpy.savetxt("./sim_output/step_7_a_py_output.txt", u, fmt='%.8f')
-
 diffuse(14)
-numpy.savetxt("./sim_output/step_7_b_py_output.txt", u, fmt='%.8f')
 
 diffuse(50)
-numpy.savetxt("./sim_output/step_7_py_output.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_7/py_u.txt", u, fmt='%.8f')

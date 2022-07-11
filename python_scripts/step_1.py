@@ -29,4 +29,4 @@ if show_plots: pyplot.show()
 
 print("u(t = ", nt * dt, "): \t", u)
 
-numpy.savetxt("./sim_output/step_1_py_output.txt", u, fmt='%.8f')
+numpy.savetxt("./sim_output/step_1/py_u.txt", u, fmt='%.8f')

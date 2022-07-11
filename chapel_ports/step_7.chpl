@@ -26,9 +26,11 @@ writeln("with dt = ", dt, ")");
 // create an 2-dimensional array to represent the computational Domain
 var u : [{0..<nx, 0..<ny}] real;
 
-diffuse(10, u); write_array_to_file("./sim_output/step_7_a_output.txt", u);
-diffuse(14, u); write_array_to_file("./sim_output/step_7_b_output.txt", u);
-diffuse(50, u); write_array_to_file("./sim_output/step_7_output.txt", u);
+diffuse(50, u);
+
+write_array_to_file("./sim_output/step_7/ch_u.txt", u);
+write_array_to_file("./sim_output/step_7/ch_x.txt", linspace(0.0, 2.0, nx));
+write_array_to_file("./sim_output/step_7/ch_y.txt", linspace(0.0, 2.0, ny));
 
 // apply the diffusion operation to 'u' for 'nt' iterations
 proc diffuse(nt: int, ref u : [?D] real) {
