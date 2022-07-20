@@ -28,7 +28,7 @@ solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
 if write_data {
     write_array_to_file("./sim_output/step_9/ch_u.txt", p);
     write_array_to_file("./sim_output/step_9/ch_x.txt", linspace(0.0, 2.0, nx));
-    write_array_to_file("./sim_output/step_9/ch_y.txt", linspace(0.0, 2.0, ny));
+    write_array_to_file("./sim_output/step_9/ch_y.txt", linspace(0.0, 1.0, ny));
 }
 
 // procedure to solve Laplace's Equation on p with the desired tolerance

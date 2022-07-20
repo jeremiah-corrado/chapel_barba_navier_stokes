@@ -1,5 +1,4 @@
 import numpy
-import sympy
 from matplotlib import pyplot
 from matplotlib import cm
 import sys
@@ -59,3 +58,5 @@ def plot2D(x, y, p):
 
 
 plot2D(x, y, p)
+
+numpy.savetxt("./sim_output/step_10/py_u.txt", p, fmt='%.8f')

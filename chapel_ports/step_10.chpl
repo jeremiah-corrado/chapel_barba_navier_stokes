@@ -7,14 +7,23 @@ const dx = 2.0 / (nx - 1);
 const dy = 1.0 / (ny - 1);
 config const num_iterations = 100;
 
-// create a 2D array to represent solution
-var p : [{0..<nx, 0..<ny}] real;
+// create 2D arrays to represent the solution and source
+var dom = {0..<nx, 0..<ny};
+var p : [dom] real;
+var b : [dom] real;
+
+// set source
+b = 0.0;
+b[nx/4, ny/4] = 100.0;
+b[3*nx/4, 3*ny/4] = -100.0;
 
 // solve the 2D Laplace's equation with the given boundary conditions
-solveLaplace2D(p, new zeroBoundary(), dx, dy, num_iterations);
-write_array_to_file("./sim_output/step_9/ch_u.txt", p);
-write_array_to_file("./sim_output/step_9/ch_x.txt", linspace(0.0, 2.0, nx));
-write_array_to_file("./sim_output/step_9/ch_y.txt", linspace(0.0, 2.0, ny));
+solvePoisson2D(p, b, new zeroBoundary(), dx, dy, num_iterations);
+
+// write data
+write_array_to_file("./sim_output/step_10/ch_u.txt", p);
+write_array_to_file("./sim_output/step_10/ch_x.txt", linspace(0.0, 2.0, nx));
+write_array_to_file("./sim_output/step_10/ch_y.txt", linspace(0.0, 1.0, ny));
 
 // procedure to solve Laplace's Equation on p with the desired tolerance
 proc solvePoisson2D(
@@ -32,25 +41,23 @@ proc solvePoisson2D(
 
     // define a subdomain on the interior points of the domain
     var Ds : subdomain(Dp); //this is not strictly necessary; however it does reduce the requisite number of bound checks during the loop below
-    Ds = D[D.dim(0).expand(-1), D.dim(1).expand(-1)];
+    Ds = Dp[Dp.dim(0).expand(-1), Dp.dim(1).expand(-1)];
 
-    // iteratively solve until desired tolerance is reached
-    for i in 0..#num_iters {
+    // iteratively solve for num_iters iterations
+    for it in 0..#num_iters {
         p <=> pn;
 
-        // // apply fd equation
-        // foreach (i, j) in Ds {
-        //     p[i, j] = (
-        //         dy**2 * (pn[i, j+1] + pn[i, j-1]) +
-        //         dx**2 * (pn[i+1, j] + pn[i-1, j])
-        //     ) / (2.0 * (dx**2 + dy**2));
-        // }
+        foreach (i, j) in Ds {
+            p[i, j] = (
+                dy**2 * (pn[i+1, j] + pn[i-1, j]) +
+                dx**2 * (pn[i, j+1] + pn[i, j-1]) -
+                b[i, j] * dx**2 * dy**2
+            ) / (2.0 * (dx**2 + dy**2));
+        }
 
         // apply boundary conditions
         boundaryCond(p);
     }
-
-    writeln("Ran for ", i, " iterations");
 }
 
 // procedure to apply the given boundary conditions to p

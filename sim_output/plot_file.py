@@ -14,16 +14,27 @@ for f in os.listdir(folder_name):
     if x:
         ch_files[x.group(1)] = numpy.loadtxt(folder_name + "/" + f)
 
-if not 'u' in ch_files or not 'x' in ch_files:
-    print("ensure data files are in given folder: ", folder_name);
-else:
+if 'p' in ch_files and 'u' in ch_files and 'v' in ch_files and 'x' in ch_files and 'y' in ch_files:
+    X, Y = numpy.meshgrid(ch_files['x'], ch_files['y'])
+    p = ch_files['p']
+
+    fig = pyplot.figure(figsize=(11,7), dpi=100)
+    pyplot.contourf(X, Y, p, alpha=0.5, cmap=cm.viridis)
+    pyplot.colorbar()
+
+    # plotting the pressure field outlines
+    pyplot.contour(X, Y, p, cmap=cm.viridis)
+    pyplot.streamplot(X, Y, ch_files['u'], ch_files['v'])
+    pyplot.xlabel('X')
+    pyplot.ylabel('Y')
+elif 'u' in ch_files and 'x' in ch_files:
     if ch_files['u'].ndim == 1:
         fig, ax = pyplot.subplots()
         ax.set_xlabel('$x$')
         ax.set_title('u(x)')
         pyplot.plot(ch_files['x'], ch_files['u'])
 
-    elif ch_files['u'].ndim == 2:
+    elif ch_files['u'].ndim == 2 and 'y' in ch_files:
         X, Y = numpy.meshgrid(ch_files['x'], ch_files['y'])
         if 'v' in ch_files:
             fig, ax = pyplot.subplots(1, 2, subplot_kw={"projection": "3d"})
@@ -43,5 +54,7 @@ else:
             ax.set_ylabel('$y$')
     else:
         print("Only 1 or 2 dimension plotting is supported")
+else:
+    print("ensure all data files are in given folder: ", folder_name);
 
-    pyplot.show()
+pyplot.show()
