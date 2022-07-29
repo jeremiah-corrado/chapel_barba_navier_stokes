@@ -17,6 +17,7 @@ config const F = 1;
 
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
+const CDOM = cdom dmapped Stencil(cdom_inner, fluff=(1,1), periodic=true);
 
 var p : [cdom] real; // pressure scalar
 var u : [cdom] real; // x component of momentum
@@ -137,14 +138,15 @@ proc p_boundary(ref p) {
 }
 
 // a custom iterator to handle the cyclical boundary on the left and right walls
-iter x_cyclical(d_inner) {
+iter x_cyclical(param tag: iterKind, A) where tag == iterKind.standalone {
+    coforall loc in A.targetLocales on loc {
+        for (i, j) in  A.localSubdomain(here) {
+            yield ((i - 1, i, i + 1), j);
+        }
+    }
     // left wall (x = 0)
     for j in d_inner.dim(1) {
         yield ((nx -1, 0, 1), j);
-    }
-    // inner domain
-    for (i, j) in d_inner {
-        yield ((i - 1, i, i + 1), j);
     }
     // right wall (x = 2)
     for j in d_inner.dim(1) {
