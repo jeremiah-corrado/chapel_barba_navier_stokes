@@ -1,8 +1,9 @@
 use util;
+import Memory.Initialization.moveSwap;
 
-config const nt = 10; // number of time steps
+config const nt = 100; // number of time steps
 config const dt = 0.001; // temporal resolution
-config const nit = 5; // number of diffusion resolution iterations
+config const nit = 100; // number of diffusion resolution iterations
 
 config const nx = 41; // x spatial-resolution
 config const ny = 41; // y spatial-resolution
@@ -10,20 +11,15 @@ const dx = 2.0 / (nx - 1);
 const dy = 2.0 / (ny - 1);
 const dxy2 = 2.0 * (dx**2 + dy**2);
 
-writeln("dx: ", dx);
-writeln("dy: ", dy);
-writeln("2(dx^2+dy^2): ", dxy2);
-
-
 config const rho = 1;
-config const nu = 1;
+config const nu = 0.1;
 
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
 
 var p : [cdom] real = 0.0; // pressure scalar
-var u : [cdom] real = 0.0; // x component of flow
-var v : [cdom] real = 0.0; // y component of flow
+var u : [cdom] real = 0.0; // x component of momentum
+var v : [cdom] real = 0.0; // y component of momentum
 
 cavity_flow_sim(u, v, p);
 
@@ -46,33 +42,20 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
 
     // run simulation for nt time steps
     for t_step in 0..#nt {
-        u <=> un;
-        v <=> vn;
-
-        // writeln("----------- U ---------------");
-        // writeln(u);
-        // writeln();
-
-        // writeln("----------- V ---------------");
-        // writeln(v);
-        // writeln();
+        // un <=> u;
+        // vn <=> v;
+        moveSwap(u, un);
+        moveSwap(v, vn);
 
         // solve for the component of p that depends solely on u and v
-        comp_b(b, u, v);
-
-        // writeln("----------- B ---------------");
-        // writeln(b);
-        // writeln();
+        comp_b(b, un, vn);
 
         // iteratively solve for pressure
         for iteration in 0..#nit {
-            p <=> pn;
+            // p <=> pn;
+            moveSwap(p, pn);
             p_np1(p, pn, b);
             p_boundary(p);
-
-            // writeln("----------- P ---------------");
-            // writeln(p);
-            // writeln();
         }
 
         // solve for u and v using the updated pressure values
@@ -114,9 +97,9 @@ proc v_np1(ref v, const ref un, const ref vn, const ref p) {
 proc p_np1(ref p, const ref pn, const ref b) {
     foreach (i, j) in cdom_inner {
         p[i, j] = (
-                    dy**2 * (p[i+1, j] - p[i-1, j]) +
-                    dx**2 * (p[i, j+1] - p[i, j-1])
-                ) / dxy2 * b[i, j];
+                    dy**2 * (pn[i+1, j] - pn[i-1, j]) +
+                    dx**2 * (pn[i, j+1] - pn[i, j-1])
+                ) / dxy2 - b[i, j];
     }
 }
 
@@ -127,15 +110,18 @@ proc comp_b(ref b, const ref u, const ref v) {
         du = u[i+1,j] - u[i-1,j];
         dv = v[i,j+1] - v[i,j-1];
 
-        b[i, j] = ((1.0 / dt) * du / (2.0 * dx) + dv / (2.0 * dy)) -
-            ((0.25 / dx**2) * du * du) -
-            ((0.25 / dy**2) * dv * dv) -
-            (0.5 / (dx * dy)) * (u[i,j+1] - u[i,j-1]) * (v[i+1,j] - v[i-1,j]);
+        b[i, j] =
+            (1.0 / dt) * (du / (2.0 * dx) + dv / (2.0 * dy)) -
+            (du * du / (4.0 * dx**2)) -
+            (dv * dv / (4.0 * dy**2)) -
+            (
+                (u[i,j+1] - u[i,j-1]) * (v[i+1,j] - v[i-1,j]) /
+                (2.0 * dy * dx)
+            );
     }
 
     b *= rho * dx**2 * dy**2 / dxy2;
 }
-
 proc uv_boundary(ref u, ref v) {
     u[.., 0] = 0.0;
     u[0, ..] = 0.0;

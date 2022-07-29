@@ -96,8 +96,8 @@ proc v_np1(ref v, const ref un, const ref vn, const ref p) {
 proc p_np1(ref p, const ref pn, const ref b) {
     forall (i, j) in cdom_inner {
         p[i, j] = (
-                    dy**2 * (p[i+1, j] - p[i-1, j]) +
-                    dx**2 * (p[i, j+1] - p[i, j-1])
+                    dy**2 * (pn[i+1, j] - pn[i-1, j]) +
+                    dx**2 * (pn[i, j+1] - pn[i, j-1])
                 ) / dxy2 * b[i, j];
     }
 }
