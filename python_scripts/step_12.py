@@ -4,6 +4,7 @@ from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
+numpy.set_printoptions(threshold=sys.maxsize)
 
 def build_up_b(rho, dt, dx, dy, u, v):
     b = numpy.zeros_like(u)
@@ -86,8 +87,8 @@ un = numpy.zeros((ny, nx))
 v = numpy.zeros((ny, nx))
 vn = numpy.zeros((ny, nx))
 
-p = numpy.ones((ny, nx))
-pn = numpy.ones((ny, nx))
+p = numpy.zeros((ny, nx))
+pn = numpy.zeros((ny, nx))
 
 b = numpy.zeros((ny, nx))
 
@@ -95,11 +96,13 @@ udiff = 1
 stepcount = 0
 
 while udiff > .001:
+# while stepcount <= 3:
     un = u.copy()
     vn = v.copy()
 
     b = build_up_b(rho, dt, dx, dy, u, v)
     p = pressure_poisson_periodic(p, dx, dy)
+
 
     u[1:-1, 1:-1] = (un[1:-1, 1:-1] -
                      un[1:-1, 1:-1] * dt / dx *
@@ -182,6 +185,8 @@ while udiff > .001:
     v[-1, :]=0
 
     udiff = (numpy.sum(u) - numpy.sum(un)) / numpy.sum(u)
+    print("Iteration: ", stepcount, " Diff: ", udiff)
+
     stepcount += 1
 
 
@@ -189,9 +194,9 @@ numpy.savetxt("./sim_output/step_12/py_u.txt", u, fmt='%.8f')
 numpy.savetxt("./sim_output/step_12/py_v.txt", v, fmt='%.8f')
 numpy.savetxt("./sim_output/step_12/py_p.txt", p, fmt='%.8f')
 
-if show_plots:
-     print("ran for ", stepcount, " steps")
+print("ran for ", stepcount, " steps")
 
+if show_plots:
      fig = pyplot.figure(figsize = (11,7), dpi=100)
      pyplot.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
      pyplot.show()
