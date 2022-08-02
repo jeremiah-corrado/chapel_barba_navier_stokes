@@ -46,10 +46,13 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
         // solve for the component of p that depends solely on u and v
         comp_b(b, un, vn);
 
+        b.updateFluff();
+
         // iteratively solve for pressure
         for iteration in 0..#nit {
             p <=> pn;
             p_np1(p, pn, b);
+            p.updateFluff();
         }
 
         // solve for u and v using the updated pressure values

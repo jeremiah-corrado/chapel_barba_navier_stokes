@@ -18,7 +18,7 @@ config const F = 1;
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
 
-var p : [cdom] real = 1.0; // pressure scalar
+var p : [cdom] real = 0.0; // pressure scalar
 var u : [cdom] real = 0.0; // x component of momentum
 var v : [cdom] real = 0.0; // y component of momentum
 
@@ -32,7 +32,7 @@ write_array_to_file("./sim_output/step_12/ch_y.txt", linspace(0.0, 2.0, ny));
 
 proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
     var udiff = 1.0;
-    var iteration = 0;
+    var i = 0;
 
     var un = u;
     var vn = v;
@@ -63,24 +63,24 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
 
         // compute the relative change in u (have we reached steady state yet?)
         udiff = ((+ reduce u) - (+ reduce un)) / (+ reduce u);
-
-        writeln("iteration: ", iteration, " udiff: ", udiff);
-        iteration += 1;
+        i += 1;
     }
+
+    writeln("ran for ", i, " iterations (final udiff = ", udiff, ")");
 }
 
 proc comp_b(ref b, const ref u, const ref v) {
     var du, dv: real;
-    foreach ((i_m, i, i_p), (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         du = u[i, j_p] - u[i, j_m];
-        dv = v[i_p, j] - v[i_m, j];
+        dv = v[i+1, j] - v[i-1, j];
 
         b[i, j] =
             (1.0 / dt) * (du / (2.0 * dx) + dv / (2.0 * dy)) -
             (du * du / (4.0 * dx**2)) -
             (dv * dv / (4.0 * dy**2)) -
             (
-                (u[i_p, j] - u[i_m, j]) * (v[i, j_p] - v[i, j_m]) /
+                (u[i+1, j] - u[i-1, j]) * (v[i, j_p] - v[i, j_m]) /
                 (2.0 * dy * dx)
             );
     }
@@ -89,22 +89,22 @@ proc comp_b(ref b, const ref u, const ref v) {
 }
 
 proc p_np1(ref p, const ref pn, const ref b) {
-    foreach ((i_m, i, i_p), (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         p[i, j] = (
                     dy**2 * (pn[i, j_p] - pn[i, j_m]) +
-                    dx**2 * (pn[i_p, j] - pn[i_m, j])
+                    dx**2 * (pn[i+1, j] - pn[i-1, j])
                 ) / dxy2 - b[i, j];
     }
 }
 
 proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    foreach ((i_m, i, i_p), (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         u[i, j] = un[i, j] -
             (un[i, j] * (dt / dx) * (un[i, j] - un[i, j_m])) -
-            (vn[i, j] * (dt / dy) * (un[i, j] - un[i_m, j])) -
-            (dt / (rho**2 * dx) * (p[i_p, j] - p[i_m, j])) +
+            (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
+            (dt / (rho**2 * dx) * (p[+1, j] - p[i-1, j])) +
             nu * (
-                (dt / dx**2) * (un[i_p, j] - 2.0 * un[i, j] + un[i_m, j]) +
+                (dt / dx**2) * (un[i+1, j] - 2.0 * un[i, j] + un[i-1, j]) +
                 (dt / dy**2) * (un[i, j_p] - 2.0 * un[i, j] + un[i, j_m])
             ) +
             F * dt;
@@ -112,13 +112,13 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    foreach ((i_m, i, i_p), (j_m, j, j_p)) in x_cyclical(cdom_inner)  {
+    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner)  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j_m]) -
-            vn[i, j] * (dt / dy) * (vn[i, j] - vn[i_m, j]) -
+            vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -
             dt / (rho**2 * dy) * (p[i, j_p] - p[i, j_m]) +
             nu * (
-                (dt / dx**2) * (vn[i_p, j] - 2.0 * vn[i, j] + vn[i_m, j]) +
+                (dt / dx**2) * (vn[i+1, j] - 2.0 * vn[i, j] + vn[i-1, j]) +
                 (dt / dy**2) * (vn[i, j_p] - 2.0 * vn[i, j] + vn[i, j_m])
             );
     }
@@ -141,30 +141,16 @@ proc p_boundary(ref p) {
 
 // a custom iterator to handle the cyclical boundary on the left and right walls
 iter x_cyclical(d_inner) {
-    // // left wall (x = 0)
-    // for j in d_inner.dim(1) {
-    //     yield ((nx - 1, 0, 1), j);
-    // }
-    // // inner domain
-    // for (i, j) in d_inner {
-    //     yield ((i - 1, i, i + 1), j);
-    // }
-    // // right wall (x = 2)
-    // for j in d_inner.dim(1) {
-    //     yield ((nx - 2, nx - 1, 0), j);
-    // }
-
-
     // left wall (x = 0)
     for i in d_inner.dim(0) {
-        yield ((i - 1, i, i + 1), (ny - 1, 0, 1));
+        yield (i, (ny - 1, 0, 1));
     }
     // inner domain
     for (i, j) in d_inner {
-        yield ((i - 1, i, i + 1), (j - 1, j, j + 1));
+        yield (i, (j - 1, j, j + 1));
     }
     // right wall (x = 2)
     for i in d_inner.dim(0) {
-        yield ((i - 1, i, i + 1), (ny - 2, ny - 1, 0));
+        yield (i, (ny - 2, ny - 1, 0));
     }
 }
