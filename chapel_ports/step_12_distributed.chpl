@@ -24,19 +24,6 @@ var p : [CDOM] real = 0.0; // pressure scalar
 var u : [CDOM] real = 0.0; // x component of momentum
 var v : [CDOM] real = 0.0; // y component of momentum
 
-for (i, j) in cdom {
-    v[i, j] =  i + j * nx;
-}
-v.updateFluff();
-
-writeln(v);
-writeln("\n");
-
-for (val, N) in v.boundaries() {
-    writeln("v: ", val, "\t N: ", N);
-}
-writeln("ok");
-
 channel_flow_sim(u, v, p, 0.001);
 
 write_array_to_file("./sim_output/step_12/ch_u.txt", u);
@@ -74,13 +61,18 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
         }
 
         // compute u and v
-        u_np1(u, un, vn, p);
-        v_np1(v, un, vn, p);
-        u_boundary(u);
-        v_boundary(v);
-
-        u.updateFluff();
-        v.updateFluff();
+        cobegin {
+            {
+                u_np1(u, un, vn, p);
+                u_boundary(u);
+                u.updateFluff();
+            }
+            {
+                v_np1(v, un, vn, p);
+                v_boundary(v);
+                v.updateFluff();
+            }
+        }
 
         // compute the relative change in u (have we reached steady state yet?)
         udiff = ((+ reduce u) - (+ reduce un)) / (+ reduce u);

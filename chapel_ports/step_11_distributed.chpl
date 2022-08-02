@@ -36,7 +36,7 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
     var vn = v;
     var pn = p;
 
-    var b : [cdom] real;
+    var b : [CDOM] real;
 
     // run simulation for nt time steps
     for t_step in 0..#nt {
@@ -62,19 +62,48 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
         }
 
         // apply boundary conditions to u and v
-        apply_boundary(u, v);
+        u_boundary(u);
+        v_boundary(v);
 
         u.updateFluff();
         v.updateFluff();
     }
 }
 
+proc comp_b(ref b, const ref u, const ref v) {
+    var du, dv: real;
+    foreach (i, j) in cdom_inner {
+        du = u[i, j+1] - u[i, j-1];
+        dv = v[i+1, j] - v[i-1, j];
+
+        b[i, j] =
+            (1.0 / dt) * (du / (2.0 * dx) + dv / (2.0 * dy)) -
+            (du * du / (4.0 * dx**2)) -
+            (dv * dv / (4.0 * dy**2)) -
+            (
+                (u[i+1, j] - u[i-1, j]) * (v[i, j+1] - v[i, j-1]) /
+                (2.0 * dy * dx)
+            );
+    }
+
+    b *= rho * dx**2 * dy**2 / dxy2;
+}
+
+proc p_np1(ref p, const ref pn, const ref b) {
+    foreach (i, j) in cdom_inner {
+        p[i, j] = (
+                    dy**2 * (pn[i, j+1] - pn[i, j-1]) +
+                    dx**2 * (pn[i+1, j] - pn[i-1, j])
+                ) / dxy2 - b[i, j];
+    }
+}
+
 proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    forall (i, j) in cdom_inner {
+    foreach (i, j) in cdom_inner {
         u[i, j] = un[i, j] -
-            un[i, j] * (dt / dx) * (un[i, j] - un[i-1, j]) -
-            vn[i, j] * (dt / dy) * (un[i, j] - un[i, j-1]) -
-            dt / (rho**2 * dx) * (p[i+1, j] - p[i-1, j]) +
+            (un[i, j] * (dt / dx) * (un[i, j] - un[i, j-1])) -
+            (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
+            (dt / (rho**2 * dx) * (p[+1, j] - p[i-1, j])) +
             nu * (
                 (dt / dx**2) * (un[i+1, j] - 2.0 * un[i, j] + un[i-1, j]) +
                 (dt / dy**2) * (un[i, j+1] - 2.0 * un[i, j] + un[i, j-1])
@@ -83,11 +112,11 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    forall (i, j) in cdom_inner {
+    foreach (i, j) in cdom_inner  {
         v[i, j] = vn[i, j] -
-            un[i, j] * (dt / dx) * (vn[i, j] - vn[i-1, j]) -
-            vn[i, j] * (dt / dy) * (vn[i, j] - vn[i, j-1]) -
-            dt / (rho**2 * dx) * (p[i, j+1] - p[i, j-1]) +
+            un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j-1]) -
+            vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -
+            dt / (rho**2 * dy) * (p[i, j+1] - p[i, j-1]) +
             nu * (
                 (dt / dx**2) * (vn[i+1, j] - 2.0 * vn[i, j] + vn[i-1, j]) +
                 (dt / dy**2) * (vn[i, j+1] - 2.0 * vn[i, j] + vn[i, j-1])
@@ -95,39 +124,23 @@ proc v_np1(ref v, const ref un, const ref vn, const ref p) {
     }
 }
 
-// compute p_n+1 from p_n and b
-proc p_np1(ref p, const ref pn, const ref b) {
-    forall (i, j) in cdom_inner {
-        p[i, j] = (
-                    dy**2 * (pn[i+1, j] - pn[i-1, j]) +
-                    dx**2 * (pn[i, j+1] - pn[i, j-1])
-                ) / dxy2 * b[i, j];
-    }
-}
-
-// compute b from u and v
-proc comp_b(ref b, const ref u, const ref v) {
-    forall (i, j) in cdom_inner with (var du: real, var dv: real) {
-        du = u[i+1,j] - u[i-1,j];
-        dv = v[i,j+1] - v[i,j-1];
-
-        b[i, j] = ((1.0 / dt) * du / (2.0 * dx) + dv / (2.0 * dy)) -
-            ((0.25 / dx**2) * du * du) -
-            ((0.25 / dy**2) * dv * dv) -
-            (0.5 / (dx * dy)) * (u[i,j+1] - u[i,j-1]) * (v[i+1,j] - v[i-1,j]);
-    }
-
-    b *= rho * dx**2 * dy**2 / dxy2;
-}
-
-proc apply_boundary(ref u, ref v) {
+proc u_boundary(ref u) {
     u[.., 0] = 0.0;
     u[0, ..] = 0.0;
     u[.., ny - 1] = 1.0;
     u[nx - 1, ..] = 0.0;
+}
 
+proc v_boundary(ref v) {
     v[.., 0] = 0.0;
     v[0, ..] = 0.0;
     v[.., ny - 1] = 0.0;
     v[nx - 1, ..] = 0.0;
+}
+
+proc p_boundary(ref p) {
+    p[.., 0] = p[.., 1];
+    p[0, ..] = p[1, ..];
+    p[.., ny - 1] = 0.0;
+    p[nx - 1, ..] = p[nx - 2, ..];
 }
