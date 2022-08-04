@@ -6,8 +6,8 @@ config const nt = 10; // number of time steps
 config const dt = 0.01; // temporal resolution
 config const nit = 50; // number of diffusion resolution iterations
 
-config const nx = 11; // x spatial-resolution
-config const ny = 11; // y spatial-resolution
+config const nx = 41; // x spatial-resolution
+config const ny = 41; // y spatial-resolution
 const dx = 2.0 / (nx - 1);
 const dy = 2.0 / (ny - 1);
 const dxy2 = 2.0 * (dx**2 + dy**2);
@@ -15,6 +15,8 @@ const dxy2 = 2.0 * (dx**2 + dy**2);
 config const rho = 1;
 config const nu = 0.1;
 config const F = 1;
+
+config const write_data = false;
 
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
@@ -26,11 +28,13 @@ var v : [CDOM] real = 0.0; // y component of momentum
 
 channel_flow_sim(u, v, p, 0.001);
 
-write_array_to_file("./sim_output/step_12/ch_u.txt", u);
-write_array_to_file("./sim_output/step_12/ch_v.txt", v);
-write_array_to_file("./sim_output/step_12/ch_p.txt", p);
-write_array_to_file("./sim_output/step_12/ch_x.txt", linspace(0.0, 2.0, nx));
-write_array_to_file("./sim_output/step_12/ch_y.txt", linspace(0.0, 2.0, ny));
+if write_data {
+    write_array_to_file("./sim_output/step_12/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_12/ch_v.txt", v);
+    write_array_to_file("./sim_output/step_12/ch_p.txt", p);
+    write_array_to_file("./sim_output/step_12/ch_x.txt", linspace(0.0, 2.0, nx));
+    write_array_to_file("./sim_output/step_12/ch_y.txt", linspace(0.0, 2.0, ny));
+}
 
 proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
     var udiff = 1.0;
@@ -85,8 +89,7 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
 }
 
 proc comp_b(ref b, const ref u, const ref v) {
-    var du, dv: real;
-    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) with (var du: real, var dv: real) {
         du = u[i, j_p] - u[i, j_m];
         dv = v[i+1, j] - v[i-1, j];
 
@@ -104,7 +107,7 @@ proc comp_b(ref b, const ref u, const ref v) {
 }
 
 proc p_np1(ref p, const ref pn, const ref b) {
-    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         p[i, j] = (
                     dy**2 * (pn[i, j_p] - pn[i, j_m]) +
                     dx**2 * (pn[i+1, j] - pn[i-1, j])
@@ -113,11 +116,11 @@ proc p_np1(ref p, const ref pn, const ref b) {
 }
 
 proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         u[i, j] = un[i, j] -
             (un[i, j] * (dt / dx) * (un[i, j] - un[i, j_m])) -
             (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
-            (dt / (rho**2 * dx) * (p[+1, j] - p[i-1, j])) +
+            (dt / (rho**2 * dx) * (p[i+1, j] - p[i-1, j])) +
             nu * (
                 (dt / dx**2) * (un[i+1, j] - 2.0 * un[i, j] + un[i-1, j]) +
                 (dt / dy**2) * (un[i, j_p] - 2.0 * un[i, j] + un[i, j_m])
@@ -127,7 +130,7 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner)  {
+    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner)  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j_m]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -

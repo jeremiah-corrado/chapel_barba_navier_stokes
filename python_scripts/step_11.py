@@ -26,13 +26,20 @@ p = numpy.zeros((ny, nx))
 b = numpy.zeros((ny, nx))
 
 def build_up_b(b, rho, dt, u, v, dx, dy):
-    b[1:-1, 1:-1] = (rho * (1 / dt *
-                    ((u[1:-1, 2:] - u[1:-1, 0:-2]) /
-                     (2 * dx) + (v[2:, 1:-1] - v[0:-2, 1:-1]) / (2 * dy)) -
-                    ((u[1:-1, 2:] - u[1:-1, 0:-2]) / (2 * dx))**2 -
-                      2 * ((u[2:, 1:-1] - u[0:-2, 1:-1]) / (2 * dy) *
-                           (v[1:-1, 2:] - v[1:-1, 0:-2]) / (2 * dx))-
-                          ((v[2:, 1:-1] - v[0:-2, 1:-1]) / (2 * dy))**2))
+    b[1:-1, 1:-1] = (rho *
+                    (1 / dt *
+                        (
+                            (u[1:-1, 2:] - u[1:-1, 0:-2]) / (2 * dx) +
+                            (v[2:, 1:-1] - v[0:-2, 1:-1]) / (2 * dy)
+                        ) -
+                        ((u[1:-1, 2:] - u[1:-1, 0:-2]) / (2 * dx))**2 -
+                        2 * (
+                            (u[2:, 1:-1] - u[0:-2, 1:-1]) / (2 * dy) *
+                            (v[1:-1, 2:] - v[1:-1, 0:-2]) / (2 * dx)
+                        ) -
+                        ((v[2:, 1:-1] - v[0:-2, 1:-1]) / (2 * dy))**2
+                    )
+                )
 
     return b
 
@@ -98,14 +105,12 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu):
         v[:, 0]  = 0
         v[:, -1] = 0
 
-
     return u, v, p
 
 u = numpy.zeros((ny, nx))
 v = numpy.zeros((ny, nx))
 p = numpy.zeros((ny, nx))
 b = numpy.zeros((ny, nx))
-nt = 100
 u, v, p = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu)
 
 if show_plots:
