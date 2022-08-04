@@ -13,7 +13,7 @@ const dy = 2.0 / (ny - 1);
 const dxy2 = 2.0 * (dx**2 + dy**2);
 
 config const rho = 1;
-config const nu = 1;
+config const nu = 0.1;
 
 config const write_data = false;
 
@@ -62,10 +62,8 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
         }
 
         // solve for u and v using the updated pressure values
-        cobegin {
-            u_np1(u, un, vn, p);
-            v_np1(v, un, vn, p);
-        }
+        u_np1(u, un, vn, p);
+        v_np1(v, un, vn, p);
 
         // apply boundary conditions to u and v
         u_boundary(u);
