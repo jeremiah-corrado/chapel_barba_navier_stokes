@@ -3,15 +3,18 @@ from matplotlib import pyplot
 from matplotlib import cm
 import sys
 
-nx = 41
-ny = 41
-nt = 100
-nit = 100
+x_len = 15.0
+y_len = 15.0
+
+nx = 500
+ny = 500
+nt = 500
+nit = 50
 c = 1
-dx = 2 / (nx - 1)
-dy = 2 / (ny - 1)
-x = numpy.linspace(0, 2, nx)
-y = numpy.linspace(0, 2, ny)
+dx = x_len / (nx - 1)
+dy = y_len / (ny - 1)
+x = numpy.linspace(0, x_len, nx)
+y = numpy.linspace(0, y_len, ny)
 X, Y = numpy.meshgrid(x, y)
 
 rho = 1

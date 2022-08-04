@@ -1,14 +1,16 @@
 use util;
 import Memory.Initialization.moveSwap;
 
-config const nt = 100; // number of time steps
+config const nt = 500; // number of time steps
 config const dt = 0.001; // temporal resolution
-config const nit = 100; // number of diffusion resolution iterations
+config const nit = 50; // number of diffusion resolution iterations
 
 config const nx = 41; // x spatial-resolution
 config const ny = 41; // y spatial-resolution
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
+config const x_len = 2.0;
+config const y_len = 2.0;
+const dx = x_len / (nx - 1);
+const dy = y_len / (ny - 1);
 const dxy2 = 2.0 * (dx**2 + dy**2);
 
 config const rho = 1;
@@ -26,8 +28,8 @@ cavity_flow_sim(u, v, p);
 write_array_to_file("./sim_output/step_11/ch_u.txt", u);
 write_array_to_file("./sim_output/step_11/ch_v.txt", v);
 write_array_to_file("./sim_output/step_11/ch_p.txt", p);
-write_array_to_file("./sim_output/step_11/ch_x.txt", linspace(0.0, 2.0, nx));
-write_array_to_file("./sim_output/step_11/ch_y.txt", linspace(0.0, 2.0, ny));
+write_array_to_file("./sim_output/step_11/ch_x.txt", linspace(0.0, x_len, nx));
+write_array_to_file("./sim_output/step_11/ch_y.txt", linspace(0.0, y_len, ny));
 
 proc cavity_flow_sim(ref u, ref v, ref p) {
     // temporary copies of computational domain
