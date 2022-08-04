@@ -82,41 +82,39 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
         udiff = ((+ reduce u) - (+ reduce un)) / (+ reduce u);
         i += 1;
 
-        writeln("iteration: ", i, " udiff: ", udiff);
+        // writeln("iteration: ", i, " udiff: ", udiff);
     }
 
     writeln("ran for ", i, " iterations (final udiff = ", udiff, ")");
 }
 
-proc comp_b(ref b, const ref u, const ref v) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) with (var du: real, var dv: real) {
+proc comp_b(ref b : [] real, const ref u, const ref v) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(array = b) with (var du: real, var dv: real) {
         du = u[i, j_p] - u[i, j_m];
         dv = v[i+1, j] - v[i-1, j];
 
-        b[i, j] =
-            (1.0 / dt) * (du / (2.0 * dx) + dv / (2.0 * dy)) -
-            (du * du / (4.0 * dx**2)) -
-            (dv * dv / (4.0 * dy**2)) -
-            (
-                (u[i+1, j] - u[i-1, j]) * (v[i, j_p] - v[i, j_m]) /
-                (2.0 * dy * dx)
+        b[i, j] = rho * (1.0 / dt) *
+            (du / (2.0 * dx) + dv / (2.0 * dy)) -
+            (du / (2.0 * dx))**2 -
+            (dv / (2.0 * dy))**2 -
+            2.0 * (
+                (u[i+1, j] - u[i-1, j]) / (2.0 * dy) *
+                (v[i, j_p] - v[i, j_m]) / (2.0 * dx)
             );
     }
-
-    b *= rho * dx**2 * dy**2 / dxy2;
 }
 
-proc p_np1(ref p, const ref pn, const ref b) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+proc p_np1(ref p : [] real, const ref pn, const ref b) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(array = p) {
         p[i, j] = (
-                    dy**2 * (pn[i, j_p] - pn[i, j_m]) +
-                    dx**2 * (pn[i+1, j] - pn[i-1, j])
-                ) / dxy2 - b[i, j];
+                    dy**2 * (pn[i, j_p] + pn[i, j_m]) +
+                    dx**2 * (pn[i+1, j] + pn[i-1, j])
+                ) / dxy2 - dx**2 * dy**2 / dxy2 * b[i, j];
     }
 }
 
-proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
+proc u_np1(ref u : [] real, const ref un, const ref vn, const ref p) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(array = u) {
         u[i, j] = un[i, j] -
             (un[i, j] * (dt / dx) * (un[i, j] - un[i, j_m])) -
             (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
@@ -129,8 +127,8 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
     }
 }
 
-proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(cdom_inner)  {
+proc v_np1(ref v : [] real, const ref un, const ref vn, const ref p) {
+    forall (i, (j_m, j, j_p)) in x_cyclical(array = v)  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j_m]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -
@@ -157,18 +155,37 @@ proc p_boundary(ref p) {
     p[nx-1, ..] = p[nx-2, ..];
 }
 
-// a custom iterator to handle the cyclical boundary on the left and right walls
-iter x_cyclical(d_inner) {
+iter x_cyclical(array: [?d] real) {
     // left wall (x = 0)
-    for i in d_inner.dim(0) {
+    for i in d.dim(0) {
         yield (i, (ny - 1, 0, 1));
     }
     // inner domain
-    for (i, j) in d_inner {
+    for (i, j) in d {
         yield (i, (j - 1, j, j + 1));
     }
     // right wall (x = 2)
-    for i in d_inner.dim(0) {
+    for i in d.dim(0) {
         yield (i, (ny - 2, ny - 1, 0));
+    }
+}
+
+iter x_cyclical(param tag: iterKind, array: [?d] real) where tag == iterKind.standalone {
+    coforall loc in array.targetLocales() do on loc {
+        const local_subdom = array.localSubdomain(here);
+
+        // left wall if present on this locale
+        if local_subdom.dim(1).contains(0) then
+            for i in local_subdom.dim(0) do
+                yield (i, (ny - 1, 0, 1));
+
+        // inner domain
+        for (i, j) in local_subdom do
+            yield (i, (j - 1, j, j + 1));
+
+        // left wall if present on this locale
+        if local_subdom.dim(1).contains(ny-1) then
+            for i in local_subdom.dim(0) do
+                yield (i, (ny - 2, ny - 1, 0));
     }
 }

@@ -18,7 +18,7 @@ config const F = 1;
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
 
-var p : [cdom] real = 0.0; // pressure scalar
+var p : [cdom] real = .0; // pressure scalar
 var u : [cdom] real = 0.0; // x component of momentum
 var v : [cdom] real = 0.0; // y component of momentum
 
@@ -75,25 +75,23 @@ proc comp_b(ref b, const ref u, const ref v) {
         du = u[i, j_p] - u[i, j_m];
         dv = v[i+1, j] - v[i-1, j];
 
-        b[i, j] =
-            (1.0 / dt) * (du / (2.0 * dx) + dv / (2.0 * dy)) -
-            (du * du / (4.0 * dx**2)) -
-            (dv * dv / (4.0 * dy**2)) -
-            (
-                (u[i+1, j] - u[i-1, j]) * (v[i, j_p] - v[i, j_m]) /
-                (2.0 * dy * dx)
+        b[i, j] = rho * (1.0 / dt) *
+            (du / (2.0 * dx) + dv / (2.0 * dy)) -
+            (du / (2.0 * dx))**2 -
+            (dv / (2.0 * dy))**2 -
+            2.0 * (
+                (u[i+1, j] - u[i-1, j]) / (2.0 * dy) *
+                (v[i, j_p] - v[i, j_m]) / (2.0 * dx)
             );
     }
-
-    b *= rho * dx**2 * dy**2 / dxy2;
 }
 
 proc p_np1(ref p, const ref pn, const ref b) {
     foreach (i, (j_m, j, j_p)) in x_cyclical(cdom_inner) {
         p[i, j] = (
-                    dy**2 * (pn[i, j_p] - pn[i, j_m]) +
-                    dx**2 * (pn[i+1, j] - pn[i-1, j])
-                ) / dxy2 - b[i, j];
+                    dy**2 * (pn[i, j_p] + pn[i, j_m]) +
+                    dx**2 * (pn[i+1, j] + pn[i-1, j])
+                ) / dxy2 - dx**2 * dy**2 / dxy2 * b[i, j];
     }
 }
 
@@ -102,7 +100,7 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
         u[i, j] = un[i, j] -
             (un[i, j] * (dt / dx) * (un[i, j] - un[i, j_m])) -
             (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
-            (dt / (rho**2 * dx) * (p[+1, j] - p[i-1, j])) +
+            (dt / (rho**2 * dx) * (p[i+1, j] - p[i-1, j])) +
             nu * (
                 (dt / dx**2) * (un[i+1, j] - 2.0 * un[i, j] + un[i-1, j]) +
                 (dt / dy**2) * (un[i, j_p] - 2.0 * un[i, j] + un[i, j_m])
