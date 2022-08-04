@@ -1,5 +1,5 @@
 use util;
-use stencilDist;
+use StencilDist;
 import Memory.Initialization.moveSwap;
 
 config const nt = 10; // number of time steps

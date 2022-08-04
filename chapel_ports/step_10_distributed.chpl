@@ -1,5 +1,5 @@
 use util;
-use stencilDist;
+use StencilDist;
 
 // define default simulation parameters
 config const nx = 50;

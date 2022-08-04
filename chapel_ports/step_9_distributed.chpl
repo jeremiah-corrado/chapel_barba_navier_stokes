@@ -1,4 +1,4 @@
-use stencilDist;
+use StencilDist;
 use util;
 
 // define default simulation parameters
