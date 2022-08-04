@@ -1,5 +1,6 @@
 use StencilDist;
 use util;
+use Time;
 import Memory.Initialization.moveSwap;
 
 config const nt = 500; // number of time steps
@@ -27,7 +28,11 @@ var p : [CDOM] real = 0.0; // pressure scalar
 var u : [CDOM] real = 0.0; // x component of flow
 var v : [CDOM] real = 0.0; // y component of flow
 
+var timer = new Timer();
+timer.start();
 cavity_flow_sim(u, v, p);
+timer.stop();
+writeln("Elapsed time: ", timer.elapsed(), " (sec)");
 
 if write_data {
     write_array_to_file("./sim_output/step_11/ch_u.txt", u);

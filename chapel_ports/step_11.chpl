@@ -1,4 +1,5 @@
 use util;
+use Time;
 import Memory.Initialization.moveSwap;
 
 config const nt = 500; // number of time steps
@@ -23,7 +24,11 @@ var p : [cdom] real = 0.0; // pressure scalar
 var u : [cdom] real = 0.0; // x component of momentum
 var v : [cdom] real = 0.0; // y component of momentum
 
+var timer = new Timer();
+timer.start();
 cavity_flow_sim(u, v, p);
+timer.stop();
+writeln("Elapsed time: ", timer.elapsed(), " (sec)");
 
 write_array_to_file("./sim_output/step_11/ch_u.txt", u);
 write_array_to_file("./sim_output/step_11/ch_v.txt", v);
