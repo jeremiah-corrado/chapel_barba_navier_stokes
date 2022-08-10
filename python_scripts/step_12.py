@@ -1,6 +1,4 @@
 import numpy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -189,7 +187,6 @@ while udiff > .001:
 
     stepcount += 1
 
-
 numpy.savetxt("./sim_output/step_12/py_u.txt", u, fmt='%.8f')
 numpy.savetxt("./sim_output/step_12/py_v.txt", v, fmt='%.8f')
 numpy.savetxt("./sim_output/step_12/py_p.txt", p, fmt='%.8f')
@@ -197,10 +194,12 @@ numpy.savetxt("./sim_output/step_12/py_p.txt", p, fmt='%.8f')
 print("ran for ", stepcount, " steps")
 
 if show_plots:
-     fig = pyplot.figure(figsize = (11,7), dpi=100)
-     pyplot.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
-     pyplot.show()
+    from matplotlib import pyplot
+    rom matplotlib import cm
+    fig = pyplot.figure(figsize = (11,7), dpi=100)
+    pyplot.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
+    pyplot.show()
 
-     fig = pyplot.figure(figsize = (11,7), dpi=100)
-     pyplot.quiver(X, Y, u, v)
-     pyplot.show()
+    fig = pyplot.figure(figsize = (11,7), dpi=100)
+    pyplot.quiver(X, Y, u, v)
+    pyplot.show()

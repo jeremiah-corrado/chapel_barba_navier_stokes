@@ -1,7 +1,4 @@
 import numpy
-import sympy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -31,11 +28,13 @@ vn = numpy.ones((ny, nx))
 u[int(.5 / dy):int(1 / dy + 1),int(.5 / dx):int(1 / dx + 1)] = 2
 v[int(.5 / dy):int(1 / dy + 1),int(.5 / dx):int(1 / dx + 1)] = 2
 
-
-fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
-X, Y = numpy.meshgrid(x, y)
-surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
-if show_plots: pyplot.show()
+if show_plots: 
+    from matplotlib import pyplot
+    from matplotlib import cm
+    fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
+    X, Y = numpy.meshgrid(x, y)
+    surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
+    pyplot.show()
 
 ### apply fd equation for nt iterations
 for n in range(nt):
@@ -72,13 +71,14 @@ for n in range(nt):
     v[:, 0] = 1
     v[:, -1] = 1
 
-fig, ax = pyplot.subplots(1, 2, subplot_kw={"projection": "3d"})
-X, Y = numpy.meshgrid(x, y)
-surf = ax[0].plot_surface(X, Y, u[:], cmap=cm.viridis)
-ax[0].set_title("u(x, y)")
-surf = ax[1].plot_surface(X, Y, v[:], cmap=cm.viridis)
-ax[1].set_title("v(x, y)")
-if show_plots: pyplot.show()
+if show_plots: 
+    fig, ax = pyplot.subplots(1, 2, subplot_kw={"projection": "3d"})
+    X, Y = numpy.meshgrid(x, y)
+    surf = ax[0].plot_surface(X, Y, u[:], cmap=cm.viridis)
+    ax[0].set_title("u(x, y)")
+    surf = ax[1].plot_surface(X, Y, v[:], cmap=cm.viridis)
+    ax[1].set_title("v(x, y)")
+    pyplot.show()
 
 numpy.savetxt("./sim_output/step_8/py_u.txt", u, fmt='%.8f')
 numpy.savetxt("./sim_output/step_8/py_v.txt", v, fmt='%.8f')

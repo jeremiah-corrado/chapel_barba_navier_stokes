@@ -1,7 +1,4 @@
 import numpy
-import sympy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -30,11 +27,13 @@ vn = numpy.ones((ny, nx))
 u[int(.5 / dy):int(1 / dy + 1),int(.5 / dx):int(1 / dx + 1)] = 2
 v[int(.5 / dy):int(1 / dy + 1),int(.5 / dx):int(1 / dx + 1)] = 2
 
-
-fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
-X, Y = numpy.meshgrid(x, y)
-surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
-if show_plots: pyplot.show()
+if show_plots: 
+    from matplotlib import pyplot
+    from matplotlib import cm
+    fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
+    X, Y = numpy.meshgrid(x, y)
+    surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
+    pyplot.show()
 
 ### apply fd equation for nt iterations
 for n in range(nt):

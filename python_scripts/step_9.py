@@ -1,7 +1,4 @@
 import numpy
-import sympy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -48,6 +45,8 @@ def laplace2d(p, y, dx, dy, l1norm_target):
 ### define a plotting function
 def plot2D(x, y, p):
     if show_plots:
+        from matplotlib import pyplot
+        from matplotlib import cm
         fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
         X, Y = numpy.meshgrid(x, y)
         surf = ax.plot_surface(X, Y, p[:], rstride=1, cstride=1, cmap=cm.viridis,

@@ -1,6 +1,4 @@
 import numpy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 x_len = 2.0
@@ -117,6 +115,8 @@ b = numpy.zeros((ny, nx))
 u, v, p = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu)
 
 if show_plots:
+    from matplotlib import pyplot
+    from matplotlib import cm   
     fig = pyplot.figure(figsize=(11,7), dpi=100)
     # plotting the pressure field as a contour
     pyplot.contourf(X, Y, p, alpha=0.5, cmap=cm.viridis)

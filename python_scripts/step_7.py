@@ -1,6 +1,4 @@
 import numpy
-from matplotlib import pyplot
-from matplotlib import cm
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -43,12 +41,15 @@ def diffuse(nt):
         u[:, 0] = 1
         u[:, -1] = 1
 
-    ## generate plot
-    fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
-    X, Y = numpy.meshgrid(x, y)
-    surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
-    ax.set_title("u(x, y)")
-    if show_plots: pyplot.show()
+    
+    if show_plots: 
+        from matplotlib import pyplot
+        from matplotlib import cm
+        fig, ax = pyplot.subplots(subplot_kw={"projection": "3d"})
+        X, Y = numpy.meshgrid(x, y)
+        surf = ax.plot_surface(X, Y, u[:], cmap=cm.viridis)
+        ax.set_title("u(x, y)")
+        pyplot.show()
 
 diffuse(10)
 diffuse(14)

@@ -1,6 +1,5 @@
 import numpy
 import sympy
-from matplotlib import pyplot
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
@@ -37,11 +36,13 @@ t = 0
 u = numpy.asarray([ufunc(t, x0, nu) for x0 in x])
 print("u(t = 0, x): \t", u)
 
-pyplot.figure(figsize=(11, 7), dpi=100)
-pyplot.plot(x, u, marker='o', lw=2)
-pyplot.xlim([0, 2 * numpy.pi])
-pyplot.ylim([0, 10])
-if show_plots: pyplot.show()
+if show_plots: 
+    from matplotlib import pyplot
+    pyplot.figure(figsize=(11, 7), dpi=100)
+    pyplot.plot(x, u, marker='o', lw=2)
+    pyplot.xlim([0, 2 * numpy.pi])
+    pyplot.ylim([0, 10])
+    pyplot.show()
 
 ### Apply Differential Equation
 for n in range(nt):
@@ -55,12 +56,14 @@ for n in range(nt):
 
 u_analytical = numpy.asarray([ufunc(nt * dt, xi, nu) for xi in x])
 
-pyplot.figure(figsize=(11, 7), dpi=100)
-pyplot.plot(x,u, marker='o', lw=2, label='Computational')
-pyplot.plot(x, u_analytical, label='Analytical')
-pyplot.xlim([0, 2 * numpy.pi])
-pyplot.ylim([0, 10])
-pyplot.legend()
-if show_plots: pyplot.show()
+
+if show_plots: 
+    pyplot.figure(figsize=(11, 7), dpi=100)
+    pyplot.plot(x,u, marker='o', lw=2, label='Computational')
+    pyplot.plot(x, u_analytical, label='Analytical')
+    pyplot.xlim([0, 2 * numpy.pi])
+    pyplot.ylim([0, 10])
+    pyplot.legend()
+    pyplot.show()
 
 numpy.savetxt("./sim_output/step_4/py_u.txt", u, fmt='%.8f')
