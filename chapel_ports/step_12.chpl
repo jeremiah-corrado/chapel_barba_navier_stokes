@@ -1,7 +1,6 @@
 use util;
 
-config const nt = 10, // number of time steps
-             dt = 0.01, // temporal resolution
+config const dt = 0.01, // temporal resolution
              nit = 50, // number of diffusion resolution iterations
              nx = 41, // x spatial-resolution
              ny = 41; // y spatial-resolution

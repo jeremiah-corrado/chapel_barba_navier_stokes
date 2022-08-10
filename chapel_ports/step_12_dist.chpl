@@ -1,8 +1,7 @@
 use StencilDist;
 use util;
 
-config const nt = 10, // number of time steps
-             dt = 0.01, // temporal resolution
+config const dt = 0.01, // temporal resolution
              nit = 50, // number of diffusion resolution iterations
              nx = 41, // x spatial-resolution
              ny = 41; // y spatial-resolution
@@ -17,10 +16,10 @@ const dx = 2.0 / (nx - 1),
 
 config const write_data = false;
 
-// Define the usual domain with an extra 2-element buffer in the x-domain
+// Define the usual domain with an extra 2-element buffer in the x-direction
 //  this is done so that the periodicity in the x-direction can be ignored.
 const cdom = {0..<(nx+2), 0..<ny};
-const cdom_inner: subdomain(cdom) = cdom.expand((-2, -1)); // the region over which we'll do stencil computations
+const cdom_inner: subdomain(cdom) = cdom.expand((-2, 0)); // the region over which we'll do stencil computations
 const cdom_actual: subdomain(cdom) = cdom.expand((-1, 0)); // the region that contains sensible solution information
 
 // define the distributed domain with cdom_inner as the bounding box, and periodicity active
@@ -51,8 +50,8 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
 
     var b : [CDOM] real;
 
-    while udiff > udiff_thresh {
-    // while iteration <= 3 {
+    // while udiff > udiff_thresh {
+    while i <= 3 {
         u <=> un;
         v <=> vn;
 
@@ -91,7 +90,7 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
 }
 
 proc comp_b(ref b : [] real, const ref u, const ref v) {
-    forall (i, j) in CDOM_INNNER with (var du: real, var dv: real) {
+    forall (i, j) in cdom_inner with (var du: real, var dv: real) {
         du = u[i, j+1] - u[i, j-1];
         dv = v[i+1, j] - v[i-1, j];
 
@@ -107,7 +106,7 @@ proc comp_b(ref b : [] real, const ref u, const ref v) {
 }
 
 proc p_np1(ref p : [] real, const ref pn, const ref b) {
-    forall (i, j) in CDOM_INNNER {
+    forall (i, j) in cdom_inner {
         p[i, j] = (
                     dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                     dx**2 * (pn[i+1, j] + pn[i-1, j])
@@ -116,7 +115,7 @@ proc p_np1(ref p : [] real, const ref pn, const ref b) {
 }
 
 proc u_np1(ref u : [] real, const ref un, const ref vn, const ref p) {
-    forall (i, j) in CDOM_INNNER {
+    forall (i, j) in cdom_inner {
         u[i, j] = un[i, j] -
             (un[i, j] * (dt / dx) * (un[i, j] - un[i, j-1])) -
             (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
@@ -130,7 +129,7 @@ proc u_np1(ref u : [] real, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v : [] real, const ref un, const ref vn, const ref p) {
-    forall (i, j) in CDOM_INNNER  {
+    forall (i, j) in cdom_inner  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j-1]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -
@@ -143,16 +142,16 @@ proc v_np1(ref v : [] real, const ref un, const ref vn, const ref p) {
 }
 
 proc u_boundary(ref u) {
-    u[0, ..] = 0.0;
-    u[nx-1, ..] = 0.0;
+    u[1, ..] = 0.0;
+    u[nx-2, ..] = 0.0;
 }
 
 proc v_boundary(ref v) {
-    v[0, ..] = 0.0;
-    v[nx-1, ..] = 0.0;
+    v[1, ..] = 0.0;
+    v[nx-2, ..] = 0.0;
 }
 
 proc p_boundary(ref p) {
-    p[0, ..] = p[1, ..];
-    p[nx-1, ..] = p[nx-2, ..];
+    p[1, ..] = p[2, ..];
+    p[nx-2, ..] = p[nx-3, ..];
 }
