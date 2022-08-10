@@ -8,11 +8,12 @@ var ufunc = lambda(t:real, x:real, nu:real) {
 };
 
 // define default simulation parameters
-config const nx = 101;
-config const nt = 100;
-const dx = 2 * pi / (nx - 1);
-config const nu = 0.07;
-const dt = dx * nu;
+config const nx = 101,
+             nt = 100,
+             nu = 0.07;
+
+const dx = 2 * pi / (nx - 1),
+      dt = dx * nu;
 
 writeln("Running 1D Diffusion Simulation over: ");
 writeln();
@@ -23,10 +24,11 @@ writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 
 // setup initial conditions
 const x = linspace(0.0, 2 * pi, nx);
-const Space = {0..<nx};
+const cdom = 0..<nx;
+const cdom_inner = 1..<(nx-1);
 
-var u : [Space] real;
-[i in Space] u[i] = ufunc(0, x[i], nu);
+var u : [cdom] real;
+[i in cdom] u[i] = ufunc(0, x[i], nu);
 
 writeln("u(t = 0, x):");
 writeln(u);
@@ -36,7 +38,7 @@ var un = u;
 for i in 0..#nt {
     u <=> un;
 
-    foreach i in {1..<(nx-1)} {
+    forall i in cdom_inner {
         u[i] = un[i] - un[i] * dt / dx *(un[i] - un[i-1]) + nu * dt / dx**2 *
                 (un[i+1] - 2 * un[i] + un[i-1]);
     }

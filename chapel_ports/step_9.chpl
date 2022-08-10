@@ -1,15 +1,18 @@
 use util;
 
 // define default simulation parameters
-config const nx = 31;
-config const ny = 31;
-const dx = 2.0 / (nx - 1);
-const dy = 1.0 / (ny - 1);
-config const l1_tolerance = 1e-4;
-config const max_num_iters = 10000;
+config const nx = 31,
+             ny = 31,
+             l1_tolerance = 1e-4,
+             max_num_iters = 10000;
+
+const dx = 2.0 / (nx - 1),
+      dy = 1.0 / (ny - 1);
 
 // create a 2D array to represent solution
-var p : [{0..<nx, 0..<ny}] real;
+const cdom = {0..<nx, 0..<ny};
+const cdom_inner : subdomain(cdom) = cdom.expand((-1, -1));
+var p : [cdom] real;
 
 // solve the 2D Laplace's equation with the given boundary conditions
 solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
@@ -34,16 +37,12 @@ proc solveLaplace2D(
     var pn = p;
     var i = 0;
 
-    // define a subdomain on the interior points of the domain
-    var Ds : subdomain(D); //this is not strictly necessary; however it does reduce the requisite number of bound checks during the loop below
-    Ds = D[D.dim(0).expand(-1), D.dim(1).expand(-1)];
-
     // iteratively solve until desired tolerance is reached
     while l1norm_rel_delta > l1_rel_delta_tolerance && i < max_num_iters {
         p <=> pn;
 
         // apply fd equation
-        foreach (i, j) in Ds {
+        foreach (i, j) in cdom_inner {
             p[i, j] = (
                 dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                 dx**2 * (pn[i+1, j] + pn[i-1, j])

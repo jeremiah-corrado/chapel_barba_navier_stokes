@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p bin
+
 for i in {1..12}
 do
     echo "Comparing Chapel and Python results from step $i..."

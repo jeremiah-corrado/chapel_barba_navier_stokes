@@ -1,22 +1,22 @@
 use StencilDist;
-use util;
 use Time;
-import Memory.Initialization.moveSwap;
+use util;
 
-config const    nt = 500, // number of time steps
-                dt = 0.001, // temporal resolution
-                nit = 50; // number of diffusion resolution iterations
+config const nt = 500, // number of time steps
+             dt = 0.001, // temporal resolution
+             nit = 50; // number of diffusion resolution iterations
 
-config const nx = 41; // x spatial-resolution
-config const ny = 41; // y spatial-resolution
-config const x_len = 2.0;
-config const y_len = 2.0;
-const dx = x_len / (nx - 1);
-const dy = y_len / (ny - 1);
-const dxy2 = 2.0 * (dx**2 + dy**2);
+config const nx = 41, // x spatial-resolution
+             ny = 41, // y spatial-resolution
+             x_len = 2.0,
+             y_len = 2.0;
 
-config const rho = 1;
-config const nu = 0.1;
+config const rho = 1,
+             nu = 0.1;
+
+const dx = x_len / (nx - 1),
+      dy = y_len / (ny - 1),
+      dxy2 = 2.0 * (dx**2 + dy**2);
 
 config const write_data = false;
 
@@ -24,10 +24,11 @@ const cdom = {0..<nx, 0..<ny};
 const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
 const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
 
-var p : [CDOM] real = 0.0; // pressure scalar
-var u : [CDOM] real = 0.0; // x component of flow
-var v : [CDOM] real = 0.0; // y component of flow
+var p : [CDOM] real = 0.0, // pressure scalar
+    u : [CDOM] real = 0.0, // x component of flow
+    v : [CDOM] real = 0.0; // y component of flow
 
+// run and time simulation
 var timer = new Timer();
 timer.start();
 cavity_flow_sim(u, v, p);
@@ -44,16 +45,16 @@ if write_data {
 
 proc cavity_flow_sim(ref u, ref v, ref p) {
     // temporary copies of computational domain
-    var un : [CDOM] real = u;
-    var vn : [CDOM] real = v;
-    var pn : [CDOM] real = p;
+    var un : [CDOM] real = u,
+        vn : [CDOM] real = v,
+        pn : [CDOM] real = p;
 
     var b : [CDOM] real = 0.0;
 
     // run simulation for nt time steps
     for t_step in 0..#nt {
-        moveSwap(u, un);
-        moveSwap(v, vn);
+        u <=> un
+        v <=> vn
 
         // solve for the component of p that depends solely on u and v
         comp_b(b, un, vn);
@@ -62,7 +63,7 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
 
         // iteratively solve for pressure
         for iteration in 0..#nit {
-            moveSwap(p, pn);
+            p <=> pn
             p_np1(p, pn, b);
             p_boundary(p);
             p.updateFluff();

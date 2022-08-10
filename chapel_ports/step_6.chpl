@@ -1,14 +1,15 @@
 use util;
 
 // define default simulation parameters
-config const nx = 81;
-config const ny = 81;
-config const nt = 100;
-config const c = 1;
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-config const sigma = 0.2;
-const dt = sigma * dx;
+config const nx = 81,
+             ny = 81,
+             nt = 100,
+             c = 1,
+             sigma = 0.2;
+
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dt = sigma * dx;
 
 writeln("Running 2D Non-Linear Convection Simulation over: ");
 writeln();
@@ -26,8 +27,10 @@ writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 writeln("with: c = ", c);
 
 // create two 2-dimensional arrays to represent the solution in each direction
-var u : [{0..<nx, 0..<ny}] real;
-var v : [{0..<nx, 0..<ny}] real;
+var cdom = {0..<nx, 0..<ny};
+var cdom_inner : subdomain(cdom) = cdom.expand((-1, -1));
+var u : [cdom] real;
+var v : [cdom] real;
 
 // set up the initial conditions
 u = 1.0;
@@ -42,7 +45,7 @@ for i in 0..#nt {
     u <=> un;
     v <=> vn;
 
-    foreach (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+    forall (i, j) in cdom_inner {
         u[i, j] = un[i, j] - (un[i, j] * c * dt / dx * (un[i, j] - un[i, j - 1])) -
                              (vn[i, j] * c * dt / dy * (un[i, j] - un[i - 1, j]));
 

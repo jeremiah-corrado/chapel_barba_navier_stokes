@@ -2,13 +2,14 @@ use StencilDist;
 use util;
 
 // define default simulation parameters
-config const nx = 31;
-config const ny = 31;
-config const nu = 0.05;
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-config const sigma = 0.25;
-const dt = sigma * dx * dy / nu;
+config const nx = 31,
+             ny = 31,
+             nu = 0.05,
+             sigma = 0.25;
+
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dt = sigma * dx * dy / nu;
 
 config const write_data = false;
 
@@ -43,7 +44,7 @@ if write_data {
 }
 
 // apply the diffusion operation to 'u' for 'nt' iterations
-proc diffuse(nt: int, ref u : [?D] real) where d.rank == 2 {
+proc diffuse(nt: int, ref u : [?d] real) where d.rank == 2 {
 
     // call helper procedure to set the initial conditions
     init_conditions(u);

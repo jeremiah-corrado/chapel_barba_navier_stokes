@@ -1,14 +1,15 @@
 use util;
 
 // define default simulation parameters
-config const nx = 41;
-config const ny = 41;
-config const nt = 120;
-config const nu = 0.01;
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-config const sigma = 0.0009;
-const dt = sigma * dx * dy / nu;
+config const nx = 41,
+             ny = 41,
+             nt = 120,
+             nu = 0.01,
+             sigma = 0.0009;
+
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dt = sigma * dx * dy / nu;
 
 writeln("Running 2D Burgers' Eq. Simulation over: ");
 writeln();
@@ -26,8 +27,10 @@ writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 writeln("with: nu = ", nu);
 
 // create two 2-dimensional arrays to represent the solution in each direction
-var u : [{0..<nx, 0..<ny}] real;
-var v : [{0..<nx, 0..<ny}] real;
+const cdom = {0..<nx, 0..<ny};
+const cdom_inner : subdomain(cdom) = cdom.expand((-1, -1));
+var u : [cdom] real;
+var v : [cdom] real;
 
 // set up the initial conditions
 u = 1.0;
@@ -42,7 +45,7 @@ for i in 0..#nt {
     u <=> un;
     v <=> vn;
 
-    foreach (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+    forall (i, j) in cdom_inner {
         u[i, j] = un[i, j]
                 - (dt / dx * un[i, j] * (un[i, j] - un[i-1, j]))
                 - (dt / dy * vn[i, j] * (un[i, j] - un[i, j-1]))

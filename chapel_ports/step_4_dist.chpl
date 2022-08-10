@@ -9,11 +9,12 @@ var ufunc = lambda(t:real, x:real, nu:real) {
 };
 
 // define default simulation parameters
-config const nx = 101;
-config const nt = 100;
-const dx = 2 * pi / (nx - 1);
-config const nu = 0.07;
-const dt = dx * nu;
+config const nx = 101,
+             nt = 100,
+             nu = 0.07;
+
+const dx = 2 * pi / (nx - 1),
+      dt = dx * nu;
 
 config const write_data = false;
 
@@ -25,7 +26,7 @@ writeln();
 writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 
 // setup a stencil-optimized domain map for an efficient memory-parallel computation
-const cdom = 0..<nx;
+const cdom = {0..<nx};
 const CDOM = cdom dmapped Stencil(cdom.expand(-1), fluff=(1,));
 const CDOM_INNER : subdomain(CDOM) = cdom.expand(-1);
 
@@ -33,7 +34,7 @@ var u : [CDOM] real;
 
 // setup initial conditions
 const x = linspace_dist(0.0, 2 * pi, nx, CDOM);
-[i in Space] u[i] = ufunc(0, x[i], nu);
+[i in CDOM] u[i] = ufunc(0, x[i], nu);
 u.updateFluff();
 
 // apply the fd equation for nt iterations

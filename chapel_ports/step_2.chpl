@@ -1,10 +1,11 @@
 use util;
 
 // define default simulation parameters
-config const nx = 41;
+config const nx = 41,
+             nt = 25,
+             dt = 0.025;
+
 const dx : real = 2.0 / (nx - 1);
-config const nt = 25;
-config const dt = 0.025;
 
 writeln("Running 1D Non-Linear Convection Simulation over: ");
 writeln();
@@ -14,7 +15,7 @@ writeln();
 writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 
 // create an array to represent the computational Domain
-var u : [{0..<nx}] real;
+var u : [0..<nx] real;
 
 // set up the initial conditions
 u = 1.0;
@@ -28,7 +29,7 @@ var un = u;
 for n in 0..#nt {
     u <=> un;
 
-    foreach i in {1..<nx} {
+    forall i in 1..<nx {
         u[i] = un[i] - un[i] * dt / dx * (un[i] - un[i-1]);
     }
 }

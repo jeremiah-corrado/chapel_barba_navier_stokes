@@ -1,20 +1,19 @@
-use util;
 use StencilDist;
-import Memory.Initialization.moveSwap;
+use util;
 
-config const nt = 10; // number of time steps
-config const dt = 0.01; // temporal resolution
-config const nit = 50; // number of diffusion resolution iterations
+config const nt = 10, // number of time steps
+             dt = 0.01, // temporal resolution
+             nit = 50, // number of diffusion resolution iterations
+             nx = 41, // x spatial-resolution
+             ny = 41; // y spatial-resolution
 
-config const nx = 41; // x spatial-resolution
-config const ny = 41; // y spatial-resolution
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-const dxy2 = 2.0 * (dx**2 + dy**2);
+config const rho = 1,
+             nu = 0.1,
+             F = 1;
 
-config const rho = 1;
-config const nu = 0.1;
-config const F = 1;
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dxy2 = 2.0 * (dx**2 + dy**2);
 
 config const write_data = false;
 
@@ -28,9 +27,9 @@ const cdom_actual: subdomain(cdom) = cdom.expand((-1, 0)); // the region that co
 const CDOM = cdom dmapped Stencil(cdom_inner, fluff=(1,1), periodic=true);
 const CDOM_INNNER = CDOM[cdom_inner];
 
-var p : [CDOM] real = 0.0; // pressure scalar
-var u : [CDOM] real = 0.0; // x component of momentum
-var v : [CDOM] real = 0.0; // y component of momentum
+var p : [CDOM] real = 0.0, // pressure scalar
+    u : [CDOM] real = 0.0, // x component of momentum
+    v : [CDOM] real = 0.0; // y component of momentum
 
 channel_flow_sim(u, v, p, 0.001);
 
@@ -43,28 +42,27 @@ if write_data {
 }
 
 proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
-    var udiff = 1.0;
-    var i = 0;
+    var udiff = 1.0,
+        i = 0;
 
-    var un : [CDOM] real = u;
-    var vn : [CDOM] real = v;
-    var pn : [CDOM] real = p;
+    var un : [CDOM] real = u,
+        vn : [CDOM] real = v,
+        pn : [CDOM] real = p;
 
     var b : [CDOM] real;
 
     while udiff > udiff_thresh {
     // while iteration <= 3 {
-        moveSwap(u, un);
-        moveSwap(v, vn);
+        u <=> un;
+        v <=> vn
 
         // compute the portion of p that depends only on u and v
         comp_b(b, u, v);
-
         b.updateFluff();
 
         // iteratively solve for p
         for p_iter in 0..#nit {
-            moveSwap(p, pn);
+            p <=> pn;
             p_np1(p, pn, b);
             p_boundary(p);
             p.updateFluff();
@@ -87,8 +85,6 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
         // compute the relative change in u (have we reached steady state yet?)
         udiff = ((+ reduce u) - (+ reduce un)) / (+ reduce u);
         i += 1;
-
-        // writeln("iteration: ", i, " udiff: ", udiff);
     }
 
     writeln("ran for ", i, " iterations (final udiff = ", udiff, ")");

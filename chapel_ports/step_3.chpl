@@ -1,12 +1,13 @@
 use util;
 
 // define default simulation parameters
-config const nx = 41;
-const dx : real = 2.0 / (nx - 1);
-config const nt = 20;
-config const nu = 0.3;
-config const sigma = 0.2;
-const dt = sigma * dx**2 / nu;
+config const nx = 41,
+             nt = 20,
+             nu = 0.3,
+             sigma = 0.2;
+
+const dx = 2.0 / (nx - 1),
+      dt = sigma * dx**2 / nu;
 
 writeln("Running 1D Diffusion Simulation over: ");
 writeln();
@@ -16,7 +17,7 @@ writeln();
 writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 
 // create an array to represent the computational Domain
-var u : [{0..<nx}] real;
+var u : [0..<nx] real;
 
 // set up the initial conditions
 u = 1.0;
@@ -30,7 +31,7 @@ var un = u;
 for n in 0..#nt {
     u <=> un;
 
-    foreach i in {1..<(nx-1)} {
+    forall i in 1..<(nx-1) {
         u[i] = un[i] + nu * dt / dx**2 * (un[i+1] - 2 * un[i] + un[i-1]);
     }
 }

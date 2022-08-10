@@ -2,14 +2,15 @@ use StencilDist;
 use util;
 
 // define default simulation parameters
-config const nx = 41;
-config const ny = 41;
-config const nt = 120;
-config const nu = 0.01;
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-config const sigma = 0.0009;
-const dt = sigma * dx * dy / nu;
+config const nx = 41,
+             ny = 41,
+             nt = 120,
+             nu = 0.01,
+             sigma = 0.0009;
+
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dt = sigma * dx * dy / nu;
 
 config const write_data = false;
 

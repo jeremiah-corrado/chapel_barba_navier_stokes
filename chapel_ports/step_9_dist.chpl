@@ -3,12 +3,13 @@ use BlockDist;
 use util;
 
 // define default simulation parameters
-config const nx = 31;
-config const ny = 31;
-const dx = 2.0 / (nx - 1);
-const dy = 1.0 / (ny - 1);
-config const l1_tolerance = 1e-4;
-config const max_num_iters = 10000;
+config const nx = 31,
+             ny = 31,
+             l1_tolerance = 1e-4,
+             max_num_iters = 10000;
+
+const dx = 2.0 / (nx - 1),
+      dy = 1.0 / (ny - 1);
 
 config const write_data = false;
 

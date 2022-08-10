@@ -2,11 +2,12 @@ use util;
 use StencilDist;
 
 // define default simulation parameters
-config const nx = 50;
-config const ny = 50;
-const dx = 2.0 / (nx - 1);
-const dy = 1.0 / (ny - 1);
-config const num_iterations = 100;
+config const nx = 50,
+             ny = 50,
+             num_iterations = 100;
+
+const dx = 2.0 / (nx - 1),
+      dy = 1.0 / (ny - 1);
 
 config const write_data = false;
 
@@ -16,8 +17,8 @@ const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
 const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
 
 // define arrays for the solution and source
-var p : [CDOM] real;
-var b : [CDOM] real;
+var p : [CDOM] real,
+    b : [CDOM] real;
 
 // set source input
 b = 0.0;

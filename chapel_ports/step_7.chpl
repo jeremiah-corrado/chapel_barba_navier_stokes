@@ -1,13 +1,16 @@
 use util;
 
 // define default simulation parameters
-config const nx = 31;
-config const ny = 31;
-config const nu = 0.05;
-const dx = 2.0 / (nx - 1);
-const dy = 2.0 / (ny - 1);
-config const sigma = 0.25;
-const dt = sigma * dx * dy / nu;
+config const nx = 31,
+             ny = 31,
+             nu = 0.05,
+             sigma = 0.25;
+
+const dx = 2.0 / (nx - 1),
+      dy = 2.0 / (ny - 1),
+      dt = sigma * dx * dy / nu;
+
+config const write_data = false;
 
 writeln("Running 2D Diffusion Simulation over: ");
 writeln();
@@ -24,7 +27,9 @@ writeln();
 writeln("with dt = ", dt, ")");
 
 // create an 2-dimensional array to represent the computational Domain
-var u : [{0..<nx, 0..<ny}] real;
+const cdom = {0..<nx, 0..<ny};
+const cdom_inner : subdomain(cdom) = cdom.expand((-1, -1));
+var u : [cdom] real;
 
 diffuse(50, u);
 
@@ -33,9 +38,7 @@ write_array_to_file("./sim_output/step_7/ch_x.txt", linspace(0.0, 2.0, nx));
 write_array_to_file("./sim_output/step_7/ch_y.txt", linspace(0.0, 2.0, ny));
 
 // apply the diffusion operation to 'u' for 'nt' iterations
-proc diffuse(nt: int, ref u : [?D] real) {
-    // make sure 'u' is 2D
-    if D.rank != 2 then halt();
+proc diffuse(nt: int, ref u : [?d] real) where d.rank == 2 {
 
     // call helper procedure to set the initial conditions
     init_conditions(u);
@@ -45,7 +48,7 @@ proc diffuse(nt: int, ref u : [?D] real) {
     for i in 0..#nt {
         u <=> un;
 
-        foreach (i, j) in {1..<(nx-1), 1..<(ny-1)} {
+        forall (i, j) in cdom_inner {
             u[i, j] = un[i, j] +
                         nu * dt / dx**2 *
                             (un[i-1, j] - 2 * un[i, j] + un[i+1, j]) +

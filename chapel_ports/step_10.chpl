@@ -1,17 +1,19 @@
 use util;
 
 // define default simulation parameters
-config const nx = 50;
-config const ny = 50;
-const dx = 2.0 / (nx - 1);
-const dy = 1.0 / (ny - 1);
-config const num_iterations = 100;
+config const nx = 50,
+             ny = 50,
+             num_iterations = 100;
+
+const dx = 2.0 / (nx - 1),
+      dy = 1.0 / (ny - 1);
 
 // create 2D arrays to represent the solution and source
-const Space = {0..<nx, 0..<ny};
-const SpaceInner : subdomain(Space) = Space.expand((-1, -1));
-var p : [Space] real;
-var b : [Space] real;
+const cdom = {0..<nx, 0..<ny};
+const cdom_inner : subdomain(cdom) = cdom.expand((-1, -1));
+
+var p : [cdom] real,
+    b : [cdom] real;
 
 // set source
 b = 0.0;
@@ -45,7 +47,7 @@ proc solvePoisson2D(
     for it in 0..#num_iters {
         p <=> pn;
 
-        foreach (i, j) in SpaceInner {
+        foreach (i, j) in cdom {
             p[i, j] = (
                 dx**2 * (pn[i+1, j] + pn[i-1, j]) +
                 dy**2 * (pn[i, j+1] + pn[i, j-1]) -
