@@ -1,5 +1,4 @@
 import numpy
-from matplotlib import pyplot
 import sys
 
 show_plots = "--show_plots" in sys.argv[1:]
