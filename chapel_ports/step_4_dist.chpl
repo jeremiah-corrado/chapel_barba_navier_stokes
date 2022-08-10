@@ -28,7 +28,7 @@ writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 // setup a stencil-optimized domain map for an efficient memory-parallel computation
 const cdom = {0..<nx};
 const CDOM = cdom dmapped Stencil(cdom.expand(-1), fluff=(1,));
-const CDOM_INNER : subdomain(CDOM) = cdom.expand(-1);
+const CDOM_INNER : subdomain(CDOM) = CDOM.expand(-1);
 
 var u : [CDOM] real;
 

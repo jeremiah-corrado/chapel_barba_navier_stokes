@@ -33,8 +33,8 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
     var udiff = 1.0,
         i = 0;
 
-    var un = u;
-        vn = v;
+    var un = u,
+        vn = v,
         pn = p;
 
     var b : [cdom] real;

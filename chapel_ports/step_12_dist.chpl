@@ -54,7 +54,7 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
     while udiff > udiff_thresh {
     // while iteration <= 3 {
         u <=> un;
-        v <=> vn
+        v <=> vn;
 
         // compute the portion of p that depends only on u and v
         comp_b(b, u, v);

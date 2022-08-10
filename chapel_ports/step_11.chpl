@@ -47,8 +47,8 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
 
     // run simulation for nt time steps
     for t_step in 0..#nt {
-        u <=> un
-        v <=> vn
+        u <=> un;
+        v <=> vn;
 
         // solve for the component of p that depends solely on u and v
         comp_b(b, un, vn);
