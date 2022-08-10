@@ -1,0 +1,23 @@
+#!/bin/bash
+
+mkdir -p bin
+
+# for i in {1..12}
+# do
+#     echo -n "Comparing Chapel and Python results from step $i"
+#     mkdir -p sim_output/step_$i
+#     chpl --fast -o bin/step_$i chapel_ports/step_$i.chpl
+#     echo "..."
+#     bin/step_$i -nl 1 > /dev/null
+#     python3 python_scripts/step_$i.py > /dev/null
+#     diff "sim_output/step_${i}/ch_u.txt" "sim_output/step_${i}/py_u.txt"
+# done
+
+for i in {4..12}
+do
+    echo -n "Comparing Chapel Distributed and Python results from step $i"
+    chpl --fast -o bin/step_$i chapel_ports/step_${i}_dist.chpl
+    echo "..."
+    bin/step_$i -nl ${1-2} --write_data=true > /dev/null
+    diff "sim_output/step_${i}/ch_u.txt" "sim_output/step_${i}/py_u.txt"
+done
