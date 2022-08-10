@@ -1,4 +1,5 @@
 use StencilDist;
+use BlockDist;
 use util;
 
 // define default simulation parameters
@@ -11,16 +12,12 @@ config const max_num_iters = 10000;
 
 config const write_data = false;
 
+const cdom = {0..<nx, 0..<ny};
+const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
+const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
+
 // create a 2D array to represent solution
-const Space = {0..<nx, 0..<ny};
-const SpaceInner = {1..<(nx-1), 1..<(nx-1)};
-
-const CompDom = Space dmapped Stencil(
-    SpaceInner, // our stencil computation is concerned with the inner set of points
-    fluff=(1,1) // each locale only needs to know about 1 point from the adjacent locales
-);
-
-var p: [CompDom] real;
+var p: [CDOM] real;
 
 // solve the 2D Laplace's equation with the given boundary conditions
 solveLaplace2D(p, new linYBoundary(), dx, dy, l1_tolerance);
@@ -44,19 +41,15 @@ proc solveLaplace2D(
 
     // define some working variables
     var l1norm_rel_delta = 1.0;
-    var pn = p;
+    var pn : [CDOM] real = p;
     var i = 0;
-
-    // define a subdomain on the interior points of the domain
-    var Ds : subdomain(D); //this is not strictly necessary; however it does reduce the requisite number of bound checks during the loop below
-    Ds = D[D.dim(0).expand(-1), D.dim(1).expand(-1)];
 
     // iteratively solve until desired tolerance is reached
     while l1norm_rel_delta > l1_rel_delta_tolerance && i < max_num_iters {
         p <=> pn;
 
         // apply fd equation
-        forall (i, j) in Ds {
+        forall (i, j) in CDOM_INNER {
             p[i, j] = (
                 dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                 dx**2 * (pn[i+1, j] + pn[i-1, j])
@@ -77,7 +70,9 @@ proc solveLaplace2D(
 
 // procedure to apply the given boundary conditions to p
 record linYBoundary {
-    var y = linspace(0, 1.0, ny);
+    const cdom_y = {0..<ny};
+    const CDOM_Y = cdom_y dmapped Block(boundingBox = cdom_y.expand(-1));
+    var y = linspace_dist(0, 1.0, ny, CDOM_Y);
 
     proc this(ref p : [?D] real) {
         p[.., 0] = 0.0;                                     // p(0.0, y) = 0

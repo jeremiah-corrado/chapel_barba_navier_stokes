@@ -15,18 +15,18 @@ for f in os.listdir(folder_name):
         ch_files[x.group(1)] = numpy.loadtxt(folder_name + "/" + f)
 
 if 'p' in ch_files and 'u' in ch_files and 'v' in ch_files and 'x' in ch_files and 'y' in ch_files:
-    X, Y = numpy.meshgrid(ch_files['x'], ch_files['y'])
+    X, Y = numpy.meshgrid(ch_files['y'], ch_files['x'])
     p = ch_files['p']
 
-    fig = pyplot.figure(figsize=(11,7), dpi=100)
-    pyplot.contourf(X, Y, p, alpha=0.5, cmap=cm.viridis)
-    pyplot.colorbar()
+    fig, ax = pyplot.subplots(1, 2, figsize=(11,7), dpi=100)
+    cf = ax[1].contourf(X, Y, p, alpha=0.5, cmap=cm.viridis)
+    fig.colorbar(cf)
+    ax[1].contour(X, Y, p, cmap=cm.viridis)
+    ax[1].streamplot(X, Y, ch_files['u'], ch_files['v'])
+    ax[1].set_xlabel('X')
+    ax[1].set_ylabel('Y')
 
-    # plotting the pressure field outlines
-    pyplot.contour(X, Y, p, cmap=cm.viridis)
-    pyplot.streamplot(X, Y, ch_files['u'], ch_files['v'])
-    pyplot.xlabel('X')
-    pyplot.ylabel('Y')
+    ax[0].quiver(X, Y, ch_files['u'], ch_files['v'])
 elif 'u' in ch_files and 'x' in ch_files:
     if ch_files['u'].ndim == 1:
         fig, ax = pyplot.subplots()

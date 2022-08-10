@@ -26,7 +26,9 @@ var v : [cdom] real = 0.0; // y component of momentum
 
 var timer = new Timer();
 timer.start();
+
 cavity_flow_sim(u, v, p);
+
 timer.stop();
 writeln("Elapsed time: ", timer.elapsed(), " (sec)");
 
@@ -121,12 +123,20 @@ proc v_np1(ref v, const ref un, const ref vn, const ref p) {
     }
 }
 
+proc u_boundary_fun(ref u) {
+    u[.., 0] = 0.0;
+    u[0, ..] = -5.5;
+    u[.., ny - 1] = 0.0;
+    u[nx - 1, ..] = 10.0;
+}
+
 proc u_boundary(ref u) {
     u[.., 0] = 0.0;
     u[0, ..] = 0.0;
     u[.., ny - 1] = 0.0;
     u[nx - 1, ..] = 1.0;
 }
+
 
 proc v_boundary(ref v) {
     v[.., 0] = 0.0;

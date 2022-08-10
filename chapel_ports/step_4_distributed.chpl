@@ -25,28 +25,25 @@ writeln();
 writeln("for ", nt * dt, " seconds (dt = ", dt, ")");
 
 // setup a stencil-optimized domain map for an efficient memory-parallel computation
-const Space = {0..<nx};
-const SpaceInner = {1..<(nx-1)};
+const cdom = 0..<nx;
+const CDOM = cdom dmapped Stencil(cdom.expand(-1), fluff=(1,));
+const CDOM_INNER : subdomain(CDOM) = cdom.expand(-1);
 
-const CompDom = Space dmapped Stencil(
-    SpaceInner, // our stencil computation is concerned with the inner set of points
-    fluff=(1,) // each locale only needs to know about 1 point from the adjacent locales
-);
-var u : [CompDom] real;
+var u : [CDOM] real;
 
 // setup initial conditions
-const x = linspace_dist(0.0, 2 * pi, nx, CompDom);
+const x = linspace_dist(0.0, 2 * pi, nx, CDOM);
 [i in Space] u[i] = ufunc(0, x[i], nu);
 u.updateFluff();
 
 // apply the fd equation for nt iterations
-var un = u;
+var un : [CDOM] = u;
 for n in 0..#nt {
     u <=> un;
     un.updateFluff(); // update the cached "fluff" points on the edge of each locale
 
     // compute the bulk of the stencil computation in parallel across all locales
-    forall i in CompDom {
+    forall i in CDOM_INNER {
         u[i] = un[i] - un[i] * dt / dx * (un[i] - un[i-1]) + nu * dt / dx**2 *
                 (un[i+1] - 2 * un[i] + un[i-1]);
     }

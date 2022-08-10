@@ -10,19 +10,16 @@ config const num_iterations = 100;
 
 config const write_data = false;
 
-// create 2D arrays to represent the solution and source
-const Space = {0..<nx, 0..<ny};
-const SpaceInner : subdomain(Space) = Space.expand((-1, -1));
+// setup a distributed stencil domain to define multi-locale arrays
+const cdom = {0..<nx, 0..<ny};
+const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
+const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
 
-const CompDom = Space dmapped Stencil(
-    SpaceInner, // our stencil computation is concerned with the inner set of points
-    fluff=(1,1) // each locale only needs to know about 1 point from the adjacent locales
-);
+// define arrays for the solution and source
+var p : [CDOM] real;
+var b : [CDOM] real;
 
-var p : [CompDom] real;
-var b : [CompDom] real;
-
-// set source
+// set source input
 b = 0.0;
 b[nx/4, ny/4] = 100.0;
 b[3*nx/4, 3*ny/4] = -100.0;
@@ -50,13 +47,13 @@ proc solvePoisson2D(
     p = 0.0;
     boundaryCond(p);
 
-    var pn = p;
+    var pn : [CDOM] real = p;
 
     // iteratively solve for num_iters iterations
     for it in 0..#num_iters {
         p <=> pn;
 
-        forall (i, j) in SpaceInner {
+        forall (i, j) in CDOM_INNER {
             p[i, j] = (
                 dx**2 * (pn[i+1, j] + pn[i-1, j]) +
                 dy**2 * (pn[i, j+1] + pn[i, j-1]) -
@@ -73,10 +70,10 @@ proc solvePoisson2D(
 
 // procedure to apply the given boundary conditions to p
 record zeroBoundary {
-    proc this(ref p : [?D] real) {
+    proc this(ref p : [?d] real) {
         p[.., 0] = 0.0;
-        p[.., D.dim(1).high] = 0.0;
+        p[.., d.dim(1).high] = 0.0;
         p[0, ..] = 0.0;
-        p[D.dim(0).high, ..] = 0.0;
+        p[d.dim(0).high, ..] = 0.0;
     }
 }

@@ -3,11 +3,11 @@ from matplotlib import pyplot
 from matplotlib import cm
 import sys
 
-x_len = 15.0
-y_len = 15.0
+x_len = 2.0
+y_len = 2.0
 
-nx = 500
-ny = 500
+nx = 41
+ny = 41
 nt = 500
 nit = 50
 c = 1
@@ -122,7 +122,7 @@ if show_plots:
     pyplot.contourf(X, Y, p, alpha=0.5, cmap=cm.viridis)
     pyplot.colorbar()
     # plotting the pressure field outlines
-    pyplot.contour(X, Y, p, cmap=cm.viridis) 
+    pyplot.contour(X, Y, p, cmap=cm.viridis)
     # plotting velocity field
     # pyplot.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2])
     pyplot.streamplot(X, Y, u, v);

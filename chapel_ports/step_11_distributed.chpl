@@ -3,9 +3,9 @@ use util;
 use Time;
 import Memory.Initialization.moveSwap;
 
-config const nt = 500; // number of time steps
-config const dt = 0.001; // temporal resolution
-config const nit = 50; // number of diffusion resolution iterations
+config const    nt = 500, // number of time steps
+                dt = 0.001, // temporal resolution
+                nit = 50; // number of diffusion resolution iterations
 
 config const nx = 41; // x spatial-resolution
 config const ny = 41; // y spatial-resolution
@@ -21,8 +21,8 @@ config const nu = 0.1;
 config const write_data = false;
 
 const cdom = {0..<nx, 0..<ny};
-const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
-const CDOM = cdom dmapped Stencil(cdom_inner, fluff=(1,1));
+const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
+const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
 
 var p : [CDOM] real = 0.0; // pressure scalar
 var u : [CDOM] real = 0.0; // x component of flow
@@ -44,9 +44,9 @@ if write_data {
 
 proc cavity_flow_sim(ref u, ref v, ref p) {
     // temporary copies of computational domain
-    var un = u;
-    var vn = v;
-    var pn = p;
+    var un : [CDOM] real = u;
+    var vn : [CDOM] real = v;
+    var pn : [CDOM] real = p;
 
     var b : [CDOM] real = 0.0;
 
@@ -82,7 +82,7 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
 }
 
 proc comp_b(ref b, const ref u, const ref v) {
-    forall (i, j) in cdom_inner with (var du: real, var dv: real) {
+    forall (i, j) in CDOM_INNER with (var du: real, var dv: real) {
         du = u[i, j+1] - u[i, j-1];
         dv = v[i+1, j] - v[i-1, j];
 
@@ -98,7 +98,7 @@ proc comp_b(ref b, const ref u, const ref v) {
 }
 
 proc p_np1(ref p, const ref pn, const ref b) {
-    forall (i, j) in cdom_inner {
+    forall (i, j) in CDOM_INNER {
         p[i, j] = (
                     dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                     dx**2 * (pn[i+1, j] + pn[i-1, j])
@@ -107,7 +107,7 @@ proc p_np1(ref p, const ref pn, const ref b) {
 }
 
 proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    forall (i, j) in cdom_inner {
+    forall (i, j) in CDOM_INNER {
         u[i, j] = un[i, j] -
             un[i, j] * (dt / dx) * (un[i, j] - un[i, j-1]) -
             vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j]) -
@@ -120,7 +120,7 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    forall (i, j) in cdom_inner  {
+    forall (i, j) in CDOM_INNER  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j-1]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -

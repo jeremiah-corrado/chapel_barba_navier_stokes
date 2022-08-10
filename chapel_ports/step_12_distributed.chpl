@@ -18,9 +18,15 @@ config const F = 1;
 
 config const write_data = false;
 
-const cdom = {0..<nx, 0..<ny};
-const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
+// Define the usual domain with an extra 2-element buffer in the x-domain
+//  this is done so that the periodicity in the x-direction can be ignored.
+const cdom = {0..<(nx+2), 0..<ny};
+const cdom_inner: subdomain(cdom) = cdom.expand((-2, -1)); // the region over which we'll do stencil computations
+const cdom_actual: subdomain(cdom) = cdom.expand((-1, 0)); // the region that contains sensible solution information
+
+// define the distributed domain with cdom_inner as the bounding box, and periodicity active
 const CDOM = cdom dmapped Stencil(cdom_inner, fluff=(1,1), periodic=true);
+const CDOM_INNNER = CDOM[cdom_inner];
 
 var p : [CDOM] real = 0.0; // pressure scalar
 var u : [CDOM] real = 0.0; // x component of momentum
@@ -29,9 +35,9 @@ var v : [CDOM] real = 0.0; // y component of momentum
 channel_flow_sim(u, v, p, 0.001);
 
 if write_data {
-    write_array_to_file("./sim_output/step_12/ch_u.txt", u);
-    write_array_to_file("./sim_output/step_12/ch_v.txt", v);
-    write_array_to_file("./sim_output/step_12/ch_p.txt", p);
+    write_array_to_file("./sim_output/step_12/ch_u.txt", u[cdom_actual]);
+    write_array_to_file("./sim_output/step_12/ch_v.txt", v[cdom_actual]);
+    write_array_to_file("./sim_output/step_12/ch_p.txt", p[cdom_actual]);
     write_array_to_file("./sim_output/step_12/ch_x.txt", linspace(0.0, 2.0, nx));
     write_array_to_file("./sim_output/step_12/ch_y.txt", linspace(0.0, 2.0, ny));
 }
@@ -40,9 +46,9 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
     var udiff = 1.0;
     var i = 0;
 
-    var un = u;
-    var vn = v;
-    var pn = p;
+    var un : [CDOM] real = u;
+    var vn : [CDOM] real = v;
+    var pn : [CDOM] real = p;
 
     var b : [CDOM] real;
 
@@ -89,8 +95,8 @@ proc channel_flow_sim(ref u, ref v, ref p, udiff_thresh: real) {
 }
 
 proc comp_b(ref b : [] real, const ref u, const ref v) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(array = b) with (var du: real, var dv: real) {
-        du = u[i, j_p] - u[i, j_m];
+    forall (i, j) in CDOM_INNNER with (var du: real, var dv: real) {
+        du = u[i, j+1] - u[i, j-1];
         dv = v[i+1, j] - v[i-1, j];
 
         b[i, j] = rho * (1.0 / dt) *
@@ -99,43 +105,43 @@ proc comp_b(ref b : [] real, const ref u, const ref v) {
             (dv / (2.0 * dy))**2 -
             2.0 * (
                 (u[i+1, j] - u[i-1, j]) / (2.0 * dy) *
-                (v[i, j_p] - v[i, j_m]) / (2.0 * dx)
+                (v[i, j+1] - v[i, j-1]) / (2.0 * dx)
             );
     }
 }
 
 proc p_np1(ref p : [] real, const ref pn, const ref b) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(array = p) {
+    forall (i, j) in CDOM_INNNER {
         p[i, j] = (
-                    dy**2 * (pn[i, j_p] + pn[i, j_m]) +
+                    dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                     dx**2 * (pn[i+1, j] + pn[i-1, j])
                 ) / dxy2 - dx**2 * dy**2 / dxy2 * b[i, j];
     }
 }
 
 proc u_np1(ref u : [] real, const ref un, const ref vn, const ref p) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(array = u) {
+    forall (i, j) in CDOM_INNNER {
         u[i, j] = un[i, j] -
-            (un[i, j] * (dt / dx) * (un[i, j] - un[i, j_m])) -
+            (un[i, j] * (dt / dx) * (un[i, j] - un[i, j-1])) -
             (vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j])) -
             (dt / (rho**2 * dx) * (p[i+1, j] - p[i-1, j])) +
             nu * (
                 (dt / dx**2) * (un[i+1, j] - 2.0 * un[i, j] + un[i-1, j]) +
-                (dt / dy**2) * (un[i, j_p] - 2.0 * un[i, j] + un[i, j_m])
+                (dt / dy**2) * (un[i, j+1] - 2.0 * un[i, j] + un[i, j-1])
             ) +
             F * dt;
     }
 }
 
 proc v_np1(ref v : [] real, const ref un, const ref vn, const ref p) {
-    forall (i, (j_m, j, j_p)) in x_cyclical(array = v)  {
+    forall (i, j) in CDOM_INNNER  {
         v[i, j] = vn[i, j] -
-            un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j_m]) -
+            un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j-1]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -
-            dt / (rho**2 * dy) * (p[i, j_p] - p[i, j_m]) +
+            dt / (rho**2 * dy) * (p[i, j+1] - p[i, j-1]) +
             nu * (
                 (dt / dx**2) * (vn[i+1, j] - 2.0 * vn[i, j] + vn[i-1, j]) +
-                (dt / dy**2) * (vn[i, j_p] - 2.0 * vn[i, j] + vn[i, j_m])
+                (dt / dy**2) * (vn[i, j+1] - 2.0 * vn[i, j] + vn[i, j-1])
             );
     }
 }
@@ -153,39 +159,4 @@ proc v_boundary(ref v) {
 proc p_boundary(ref p) {
     p[0, ..] = p[1, ..];
     p[nx-1, ..] = p[nx-2, ..];
-}
-
-iter x_cyclical(array: [?d] real) {
-    // left wall (x = 0)
-    for i in d.dim(0) {
-        yield (i, (ny - 1, 0, 1));
-    }
-    // inner domain
-    for (i, j) in d {
-        yield (i, (j - 1, j, j + 1));
-    }
-    // right wall (x = 2)
-    for i in d.dim(0) {
-        yield (i, (ny - 2, ny - 1, 0));
-    }
-}
-
-iter x_cyclical(param tag: iterKind, array: [?d] real) where tag == iterKind.standalone {
-    coforall loc in array.targetLocales() do on loc {
-        const local_subdom = array.localSubdomain(here);
-
-        // left wall if present on this locale
-        if local_subdom.dim(1).contains(0) then
-            for i in local_subdom.dim(0) do
-                yield (i, (ny - 1, 0, 1));
-
-        // inner domain
-        for (i, j) in local_subdom do
-            yield (i, (j - 1, j, j + 1));
-
-        // left wall if present on this locale
-        if local_subdom.dim(1).contains(ny-1) then
-            for i in local_subdom.dim(0) do
-                yield (i, (ny - 2, ny - 1, 0));
-    }
 }
