@@ -43,14 +43,14 @@ if write_data {
 }
 
 // apply the diffusion operation to 'u' for 'nt' iterations
-proc diffuse(nt: int, ref u : [?D] real) where d.rank = 2 {
+proc diffuse(nt: int, ref u : [?D] real) where d.rank == 2 {
 
     // call helper procedure to set the initial conditions
     init_conditions(u);
     u.updateFluff();
 
     // apply the fd equation for nt iterations
-    var un : [CDOM] = u;
+    var un : [CDOM] real = u;
     for i in 0..#nt {
         u <=> un;
 

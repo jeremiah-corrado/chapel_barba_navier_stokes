@@ -37,7 +37,7 @@ const x = linspace_dist(0.0, 2 * pi, nx, CDOM);
 u.updateFluff();
 
 // apply the fd equation for nt iterations
-var un : [CDOM] = u;
+var un : [CDOM] real = u;
 for n in 0..#nt {
     u <=> un;
     un.updateFluff(); // update the cached "fluff" points on the edge of each locale
