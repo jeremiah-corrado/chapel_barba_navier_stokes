@@ -1,5 +1,8 @@
 import numpy
 import sys
+import socket
+
+# print("Running on: ", socket.gethostname())
 
 x_len = 2.0
 y_len = 2.0
@@ -20,7 +23,7 @@ nu = .1
 dt = .001
 
 show_plots = False
-write_data = True
+write_data = False
 
 arg_names = [name.split("=")[0] for name in sys.argv[1:]]
 arg_vals = [name.split("=")[1] for name in sys.argv[1:]]
@@ -129,7 +132,7 @@ if show_plots:
     pyplot.contour(X, Y, p, cmap=cm.viridis)
     # plotting velocity field
     # pyplot.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2])
-    pyplot.streamplot(X, Y, u, v);
+    pyplot.streamplot(X, Y, u, v)
     pyplot.xlabel('X')
     pyplot.ylabel('Y')
     pyplot.show()

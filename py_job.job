@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name=ns_s11_test
+#SBATCH --quiet 
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=96
+#SBATCH --exclusive
+#SBATCH --mem=0
+#SBATCH --constraint=CL48,192GB
+
+export HUGETLB_VERBOSE=0
+export HUGETLB_NO_RESERVE=yes
+export CHPL_JE_MALLOC_CONF=purge:decay
+
+python3 $LUS_HOME/chapel_barba_navier_stokes/python_scripts/step_11.py
