@@ -15,10 +15,10 @@ const program_name =  "step_" + step:string + (if dist then "_dist" else "");
 proc main(args: [] string) {
     writeln("Testing: ", program_name);
 
-    // compile: chpl --fast -o bin/{name} chapel_ports/{name}.chpl
-    writeln("Compiling...");
-    var comp = Sub.spawn(["chpl", "--fast", "-o", "bin/" + program_name, "./chapel_ports/" + program_name + ".chpl"]);
-    comp.wait();
+    // // compile: chpl --fast -o bin/{name} chapel_ports/{name}.chpl
+    // writeln("Compiling...");
+    // var comp = Sub.spawn(["chpl", "--fast", "-o", "bin/" + program_name, "./chapel_ports/" + program_name + ".chpl"]);
+    // comp.wait();
 
     // run: ./bin/{name} -nl {nl} {args}
     writeln("Running...");
@@ -39,35 +39,49 @@ proc main(args: [] string) {
     writeln("Mean Walltime: ", mean);
 
     writeln("Exporting Data...");
-    exportData("./perf_data_" + program_name + ".csv", walltimes, mean, args[1..]);
+    exportData("./perf_data_" + program_name + ".csv", walltimes, mean, spawn_args_array);
 }
 
 proc exportData(fileName: string, walltimes: [] real, mean: real, spawn_args: [] string) {
-    var f, w, b;
+    var f, w, r;
 
-    try! { if !FS.exists(fileName) then writeHeader(fileName); }
-    try! { b = FS.getFileSize(fileName); }
-    try! { f = open(fileName, iomode.cw); }
-    try! { w = f.writer(start=b); }
+    try! {
+        if !FS.exists(fileName) then writeHeader(fileName);
+        f = open(fileName, iomode.r);
+        r = f.reader();
 
-    w.write("".join(spawn_args));
-    for wt in walltimes do w.writef(", %.5dr", wt);
-    w.writeln(", %.5dr", mean);
+        var current_contents: string;
+        r.readstring(current_contents);
 
-    w.close();
-    f.close();
+        r.close();
+        f.close();
+
+        f = open(fileName, iomode.cw);
+        w = f.writer();
+
+        w.write(current_contents);
+        w.write("".join(spawn_args));
+        for wt in walltimes do w.writef(", %.5dr", wt);
+        w.writef(", %.5dr\n", mean);
+
+        w.close();
+        f.close();
+    }
+    
 }
 
 proc writeHeader(fileName: string) {
     var f, w;
 
-    try! { f = open(fileName, iomode.cw); }
-    try! { w = f.writer(); }
+    try! { 
+        f = open(fileName, iomode.cw);
+        w = f.writer();
 
-    w.write("Trial: ");
-    for tid in 0..#n do w.write(", ", tid:string);
-    w.writeln(", mean");
+        w.write("Trial: ");
+        for tid in 0..#n do w.write(", ", tid:string);
+        w.writeln(", mean");
 
-    w.close();
-    f.close();
+        w.close();
+        f.close();
+    }
 }
