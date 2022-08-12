@@ -39,7 +39,7 @@ proc main(args: [] string) {
     writeln("Mean Walltime: ", mean);
 
     writeln("Exporting Data...");
-    exportData("./perf_data_" + program_name + ".csv", walltimes, mean, spawn_args_array);   
+    exportData("./perf_data_" + program_name + ".csv", walltimes, mean, args[1..]);
 }
 
 proc exportData(fileName: string, walltimes: [] real, mean: real, spawn_args: [] string) {
@@ -50,7 +50,7 @@ proc exportData(fileName: string, walltimes: [] real, mean: real, spawn_args: []
     try! { f = open(fileName, iomode.cw); }
     try! { w = f.writer(start=b); }
 
-    w.write(paramSummary(spawn_args));
+    w.write("".join(spawn_args));
     for wt in walltimes do w.writef(", %.5dr", wt);
     w.writeln(", %.5dr", mean);
 
@@ -65,13 +65,9 @@ proc writeHeader(fileName: string) {
     try! { w = f.writer(); }
 
     w.write("Trial: ");
-    for tid in 0..#n do w.write(", ", tid);
+    for tid in 0..#n do w.write(", ", tid:string);
     w.writeln(", mean");
 
     w.close();
     f.close();
-}
-
-proc paramSummary(spawn_args: [] string) : string {
-    return ("dist="+dist:string).join(spawn_args);
 }
