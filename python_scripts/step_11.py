@@ -19,12 +19,15 @@ rho = 1
 nu = .1
 dt = .001
 
-show_plots = "--show_plots" in sys.argv[1:]
+show_plots = False
+write_data = True
 
-u = numpy.zeros((ny, nx))
-v = numpy.zeros((ny, nx))
-p = numpy.zeros((ny, nx))
-b = numpy.zeros((ny, nx))
+arg_names = [name.split("=")[0] for name in sys.argv[1:]]
+arg_vals = [name.split("=")[1] for name in sys.argv[1:]]
+for cnfg_name in ["x_len", "y_len", "nx", "ny", "show_plots", "write_data"]:
+    cnfg_flaged = ("--" + cnfg_name)
+    if cnfg_flaged in arg_names:
+        globals()[cnfg_name] = int(arg_vals[arg_names.index(cnfg_flaged)])
 
 def build_up_b(b, rho, dt, u, v, dx, dy):
     b[1:-1, 1:-1] = (rho *
@@ -112,6 +115,7 @@ u = numpy.zeros((ny, nx))
 v = numpy.zeros((ny, nx))
 p = numpy.zeros((ny, nx))
 b = numpy.zeros((ny, nx))
+
 u, v, p = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu)
 
 if show_plots:
@@ -130,6 +134,7 @@ if show_plots:
     pyplot.ylabel('Y')
     pyplot.show()
 
-numpy.savetxt("./sim_output/step_11/py_u.txt", u, fmt='%.8f')
-numpy.savetxt("./sim_output/step_11/py_v.txt", v, fmt='%.8f')
-numpy.savetxt("./sim_output/step_11/py_p.txt", p, fmt='%.8f')
+if write_data:
+    numpy.savetxt("./sim_output/step_11/py_u.txt", u, fmt='%.8f')
+    numpy.savetxt("./sim_output/step_11/py_v.txt", v, fmt='%.8f')
+    numpy.savetxt("./sim_output/step_11/py_p.txt", p, fmt='%.8f')

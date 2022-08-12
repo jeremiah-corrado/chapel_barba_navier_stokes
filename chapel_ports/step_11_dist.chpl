@@ -1,6 +1,7 @@
 use StencilDist;
-use Time;
 use util;
+
+use BlockDist;
 
 config const nt = 500, // number of time steps
              dt = 0.001, // temporal resolution
@@ -21,19 +22,15 @@ const dx = x_len / (nx - 1),
 config const write_data = false;
 
 const cdom = {0..<nx, 0..<ny};
-const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1));
-const CDOM_INNER: subdomain(CDOM) = CDOM.expand((-1, -1));
+// const CDOM = cdom dmapped Stencil(cdom.expand((-1, -1)), fluff=(1, 1), periodic=true);
+const CDOM = cdom dmapped Block(cdom.expand((-1, 1)));
+const CDOM_INNER = CDOM[{1..<(nx-1), 1..<(ny-1)}];
 
 var p : [CDOM] real = 0.0, // pressure scalar
     u : [CDOM] real = 0.0, // x component of flow
     v : [CDOM] real = 0.0; // y component of flow
 
-// run and time simulation
-var timer = new Timer();
-timer.start();
 cavity_flow_sim(u, v, p);
-timer.stop();
-writeln("Elapsed time: ", timer.elapsed(), " (sec)");
 
 if write_data {
     write_array_to_file("./sim_output/step_11/ch_u.txt", u);
@@ -58,15 +55,14 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
 
         // solve for the component of p that depends solely on u and v
         comp_b(b, un, vn);
-
-        b.updateFluff();
+        // b.updateFluff();
 
         // iteratively solve for pressure
         for iteration in 0..#nit {
             p <=> pn;
             p_np1(p, pn, b);
             p_boundary(p);
-            p.updateFluff();
+            // p.updateFluff();
         }
 
         // solve for u and v using the updated pressure values
@@ -77,13 +73,13 @@ proc cavity_flow_sim(ref u, ref v, ref p) {
         u_boundary(u);
         v_boundary(v);
 
-        u.updateFluff();
-        v.updateFluff();
+        // u.updateFluff();
+        // v.updateFluff();
     }
 }
 
 proc comp_b(ref b, const ref u, const ref v) {
-    forall (i, j) in CDOM_INNER with (var du: real, var dv: real) {
+    forall (i, j) in CDOM with (var du: real, var dv: real) {
         du = u[i, j+1] - u[i, j-1];
         dv = v[i+1, j] - v[i-1, j];
 
@@ -99,7 +95,7 @@ proc comp_b(ref b, const ref u, const ref v) {
 }
 
 proc p_np1(ref p, const ref pn, const ref b) {
-    forall (i, j) in CDOM_INNER {
+    forall (i, j) in CDOM {
         p[i, j] = (
                     dy**2 * (pn[i, j+1] + pn[i, j-1]) +
                     dx**2 * (pn[i+1, j] + pn[i-1, j])
@@ -108,7 +104,7 @@ proc p_np1(ref p, const ref pn, const ref b) {
 }
 
 proc u_np1(ref u, const ref un, const ref vn, const ref p) {
-    forall (i, j) in CDOM_INNER {
+    forall (i, j) in CDOM {
         u[i, j] = un[i, j] -
             un[i, j] * (dt / dx) * (un[i, j] - un[i, j-1]) -
             vn[i, j] * (dt / dy) * (un[i, j] - un[i-1, j]) -
@@ -121,7 +117,7 @@ proc u_np1(ref u, const ref un, const ref vn, const ref p) {
 }
 
 proc v_np1(ref v, const ref un, const ref vn, const ref p) {
-    forall (i, j) in CDOM_INNER  {
+    forall (i, j) in CDOM  {
         v[i, j] = vn[i, j] -
             un[i, j] * (dt / dx) * (vn[i, j] - vn[i, j-1]) -
             vn[i, j] * (dt / dy) * (vn[i, j] - vn[i-1, j]) -

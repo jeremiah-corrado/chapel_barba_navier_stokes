@@ -1,4 +1,3 @@
-use Time;
 use util;
 
 config const nt = 500, // number of time steps
@@ -17,6 +16,8 @@ const dx = x_len / (nx - 1),
       dy = y_len / (ny - 1),
       dxy2 = 2.0 * (dx**2 + dy**2);
 
+config const write_data = true;
+
 const cdom = {0..<nx, 0..<ny};
 const cdom_inner: subdomain(cdom) = cdom.expand((-1, -1));
 
@@ -24,18 +25,15 @@ var p : [cdom] real = 0.0, // pressure scalar
     u : [cdom] real = 0.0, // x component of momentum
     v : [cdom] real = 0.0; // y component of momentum
 
-// run and time simulation
-var timer = new Timer();
-timer.start();
 cavity_flow_sim(u, v, p);
-timer.stop();
-writeln("Elapsed time: ", timer.elapsed(), " (sec)");
 
-write_array_to_file("./sim_output/step_11/ch_u.txt", u);
-write_array_to_file("./sim_output/step_11/ch_v.txt", v);
-write_array_to_file("./sim_output/step_11/ch_p.txt", p);
-write_array_to_file("./sim_output/step_11/ch_x.txt", linspace(0.0, x_len, nx));
-write_array_to_file("./sim_output/step_11/ch_y.txt", linspace(0.0, y_len, ny));
+if write_data {
+    write_array_to_file("./sim_output/step_11/ch_u.txt", u);
+    write_array_to_file("./sim_output/step_11/ch_v.txt", v);
+    write_array_to_file("./sim_output/step_11/ch_p.txt", p);
+    write_array_to_file("./sim_output/step_11/ch_x.txt", linspace(0.0, x_len, nx));
+    write_array_to_file("./sim_output/step_11/ch_y.txt", linspace(0.0, y_len, ny));
+}
 
 proc cavity_flow_sim(ref u, ref v, ref p) {
     // temporary copies of computational domain
