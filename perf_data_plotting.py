@@ -14,12 +14,11 @@ with open(sys.argv[1]) as csv_data:
         if header:
             header = False
         else:
-            problem_size = int(re.search(r"nx=([0-9]+)", row[1]).group(1))
-            print(problem_size, " \t ", row[12])
+            problem_size = int(re.search(r"nx=([0-9]+)", row[1]).group(1)) * int(re.search(r"ny=([0-9]+)", row[1]).group(1))
             if row[0] == 'chpl':
-                chpl_perf[problem_size] = float(row[12].strip())
+                chpl_perf[problem_size] = float(row[-1].strip())
             elif row[0] == 'py':
-                py_perf[problem_size] = float(row[12].strip())
+                py_perf[problem_size] = float(row[-1].strip())
 
 chpl_perf = OrderedDict(sorted(chpl_perf.items()))
 py_perf = OrderedDict(sorted(py_perf.items()))
