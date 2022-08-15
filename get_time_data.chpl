@@ -10,7 +10,8 @@ config const n = 10,
              nl = 1,
              step = 11,
              dist = false,
-             recompile = false;
+             recompile = false,
+             run_python = true;
 
 const program_name =  "step_" + step:string + (if dist then "_dist" else "");
 
@@ -33,21 +34,23 @@ proc main(args: [] string) {
     const (chpl_walltimes, chpl_mean) = exec_tests(spawn_args_array);
 
     writeln("Exporting Chapel Data...");
-    exportData("./perf_data_" + program_name + ".csv", chpl_walltimes, chpl_mean, spawn_args_array, "chpl");
+    exportData("./perf_data_" + program_name + "_nl_" + nl:string + ".csv", chpl_walltimes, chpl_mean, spawn_args_array, "chpl");
 
-    writeln("Running Python...");
-    var py_spawn_args_list = new List.list([
-        "srun", "--job-name=py_step_" + step:string, 
-        "--quiet", "--nodes=1", "--ntasks=1", "--ntasks-per-node=1", "--cpus-per-task=96",
-        "--exclusive", "--mem=0", "--kill-on-bad-exit", "--constraint=CL48,192GB", 
-        "python3", Path.absPath("./python_scripts/step_" + step:string + ".py"):string
-        ]);
-    py_spawn_args_list.append(args[1..]);
-    const py_spawn_args_array = py_spawn_args_list.toArray();
-    const (py_walltimes, py_mean) = exec_tests(py_spawn_args_array);
+    if run_python {
+        writeln("Running Python...");
+        var py_spawn_args_list = new List.list([
+            "srun", "--job-name=py_step_" + step:string, 
+            "--quiet", "--nodes=1", "--ntasks=1", "--ntasks-per-node=1", "--cpus-per-task=96",
+            "--exclusive", "--mem=0", "--kill-on-bad-exit", "--constraint=CL48,192GB", 
+            "python3", Path.absPath("./python_scripts/step_" + step:string + ".py"):string
+            ]);
+        py_spawn_args_list.append(args[1..]);
+        const py_spawn_args_array = py_spawn_args_list.toArray();
+        const (py_walltimes, py_mean) = exec_tests(py_spawn_args_array);
 
-    writeln("Exporting Python Data...");
-    exportData("./perf_data_" + program_name + ".csv", py_walltimes, py_mean, spawn_args_array, "py");
+        writeln("Exporting Python Data...");
+        exportData("./perf_data_" + program_name + "_nl_" + nl:string + ".csv", py_walltimes, py_mean, spawn_args_array, "py");
+    }
 }
 
 proc exec_tests(spawn_args: [] string) {
